@@ -1,0 +1,96 @@
+BRACKET_MODE,TEAM,ROUND_REACHED,ROUND_NAME,CHAMPION
+chalk,Alabama,3,S16,Duke
+chalk,Arizona,2,R32,Duke
+chalk,Auburn,4,E8,Duke
+chalk,BYU,1,R64,Duke
+chalk,Baylor,1,R64,Duke
+chalk,Clemson,1,R64,Duke
+chalk,Colorado St.,1,R64,Duke
+chalk,Connecticut,1,R64,Duke
+chalk,Duke,6,Champion,Duke
+chalk,Florida,5,F4,Duke
+chalk,Gonzaga,1,R64,Duke
+chalk,Houston,4,E8,Duke
+chalk,Illinois,1,R64,Duke
+chalk,Iowa St.,2,R32,Duke
+chalk,Kansas,2,R32,Duke
+chalk,Kentucky,2,R32,Duke
+chalk,Louisville,1,R64,Duke
+chalk,Marquette,1,R64,Duke
+chalk,Maryland,2,R32,Duke
+chalk,Michigan,1,R64,Duke
+chalk,Michigan St.,3,S16,Duke
+chalk,North Carolina,1,R64,Duke
+chalk,Oregon,1,R64,Duke
+chalk,Purdue,2,R32,Duke
+chalk,Saint Mary's,1,R64,Duke
+chalk,St. John's,1,R64,Duke
+chalk,Tennessee,3,S16,Duke
+chalk,Texas A&M,2,R32,Duke
+chalk,Texas Tech,3,S16,Duke
+chalk,UCLA,1,R64,Duke
+chalk,Wisconsin,2,R32,Duke
+medium,Alabama,3,S16,Duke
+medium,Arizona,2,R32,Duke
+medium,Auburn,4,E8,Duke
+medium,BYU,1,R64,Duke
+medium,Clemson,1,R64,Duke
+medium,Colorado St.,1,R64,Duke
+medium,Duke,6,Champion,Duke
+medium,Florida,5,F4,Duke
+medium,Gonzaga,1,R64,Duke
+medium,Houston,4,E8,Duke
+medium,Illinois,2,R32,Duke
+medium,Iowa St.,1,R64,Duke
+medium,Kansas,1,R64,Duke
+medium,Kentucky,2,R32,Duke
+medium,Louisville,1,R64,Duke
+medium,Maryland,2,R32,Duke
+medium,Michigan,2,R32,Duke
+medium,Michigan St.,2,R32,Duke
+medium,Mississippi St.,1,R64,Duke
+medium,Missouri,1,R64,Duke
+medium,New Mexico,1,R64,Duke
+medium,North Carolina,3,S16,Duke
+medium,Oklahoma,1,R64,Duke
+medium,Oregon,1,R64,Duke
+medium,Purdue,2,R32,Duke
+medium,Saint Mary's,1,R64,Duke
+medium,St. John's,2,R32,Duke
+medium,Tennessee,3,S16,Duke
+medium,Texas A&M,1,R64,Duke
+medium,Texas Tech,3,S16,Duke
+medium,UCLA,1,R64,Duke
+medium,Wisconsin,1,R64,Duke
+chaos,Alabama,3,S16,Duke
+chaos,Arizona,2,R32,Duke
+chaos,Auburn,4,E8,Duke
+chaos,BYU,2,R32,Duke
+chaos,Duke,6,Champion,Duke
+chaos,Florida,5,F4,Duke
+chaos,Gonzaga,1,R64,Duke
+chaos,Houston,4,E8,Duke
+chaos,Iowa St.,1,R64,Duke
+chaos,Kansas,1,R64,Duke
+chaos,Kentucky,3,S16,Duke
+chaos,Liberty,1,R64,Duke
+chaos,Louisville,1,R64,Duke
+chaos,Maryland,2,R32,Duke
+chaos,McNeese St.,1,R64,Duke
+chaos,Memphis,1,R64,Duke
+chaos,Michigan,1,R64,Duke
+chaos,Michigan St.,1,R64,Duke
+chaos,Mississippi St.,1,R64,Duke
+chaos,Missouri,1,R64,Duke
+chaos,New Mexico,3,S16,Duke
+chaos,North Carolina,2,R32,Duke
+chaos,Oklahoma,1,R64,Duke
+chaos,Purdue,2,R32,Duke
+chaos,St. John's,3,S16,Duke
+chaos,Tennessee,2,R32,Duke
+chaos,Texas,2,R32,Duke
+chaos,Texas Tech,1,R64,Duke
+chaos,Utah St.,1,R64,Duke
+chaos,Vanderbilt,1,R64,Duke
+chaos,Wisconsin,1,R64,Duke
+chaos,Yale,2,R32,Duke

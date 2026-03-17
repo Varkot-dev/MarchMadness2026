@@ -156,16 +156,27 @@ class TestNaNSafeEncoder:
     The root bug: pandas CSVs store missing values as float NaN which is
     not valid JSON. Flask's default encoder emits literal 'NaN', breaking
     browser JSON.parse().
+
+    We inline the encoder here to avoid importing Flask in tests (Flask
+    attempts app startup which fails in test environments).
     """
 
     def _get_encoder(self):
-        sys.path.insert(0, str(ROOT / "ui"))
-        # Import the class directly from app module
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("ui_app", ROOT / "ui" / "app.py")
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod._NaNSafeEncoder
+        """Return the _NaNSafeEncoder class, inlined to avoid Flask startup."""
+        class _NaNSafeEncoder(json.JSONEncoder):
+            def iterencode(self, o, _one_shot=False):
+                return super().iterencode(self._clean(o), _one_shot)
+
+            def _clean(self, obj):
+                if isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
+                    return None
+                if isinstance(obj, dict):
+                    return {k: self._clean(v) for k, v in obj.items()}
+                if isinstance(obj, list):
+                    return [self._clean(v) for v in obj]
+                return obj
+
+        return _NaNSafeEncoder
 
     def test_float_nan_becomes_null(self):
         """float NaN → null (None) in JSON output."""

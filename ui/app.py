@@ -19,31 +19,29 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from flask import Flask, jsonify, render_template
-import json
 import pandas as pd
 import numpy as np
 
-
-class _NaNSafeEncoder(json.JSONEncoder):
-    """Replace float NaN/Inf with None so jsonify never emits invalid JSON."""
-    def iterencode(self, o, _one_shot=False):
-        return super().iterencode(self._clean(o), _one_shot)
-
-    def _clean(self, obj):
-        if isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
-            return None
-        if isinstance(obj, dict):
-            return {k: self._clean(v) for k, v in obj.items()}
-        if isinstance(obj, list):
-            return [self._clean(v) for v in obj]
-        return obj
 
 from config import PROCESSED_DIR, EXTERNAL_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
 app = Flask(__name__)
-app.json_encoder = _NaNSafeEncoder
+
+
+def _sanitize(obj):
+    """Recursively replace float NaN/Inf with None so jsonify never emits invalid JSON.
+
+    Flask 3.x removed json_encoder; sanitize data directly before passing to jsonify.
+    """
+    if isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
+        return None
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize(v) for v in obj]
+    return obj
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -408,7 +406,7 @@ def api_bracket(year: int):
     formula_info = load_formula_weights()
     cv_results   = load_cv_results()
 
-    return jsonify({
+    return jsonify(_sanitize({
         "year":             year,
         "matchups":         matchups,
         "champion":         champion,
@@ -422,18 +420,18 @@ def api_bracket(year: int):
         "cv_results":       cv_results,
         "train_years":      TRAIN_YEARS,
         "holdout_years":    HOLDOUT_YEARS,
-    })
+    }))
 
 
 @app.route("/api/formula")
 def api_formula():
     """Return model formula weights and CV results."""
-    return jsonify({
+    return jsonify(_sanitize({
         "formula":    load_formula_weights(),
         "cv_results": load_cv_results(),
         "train_years":   TRAIN_YEARS,
         "holdout_years": HOLDOUT_YEARS,
-    })
+    }))
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ from sklearn.metrics import log_loss, accuracy_score
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from config import PROCESSED_DIR, EXTERNAL_DIR
+from config import PROCESSED_DIR, EXTERNAL_DIR, ESPN_ROUND_POINTS, SEED_PAIRINGS, REGIONS
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
@@ -73,8 +73,8 @@ FEATURES = [
 DAYNUM_TO_ROUND: dict[int, int] = {}  # populated dynamically per year
 
 SEED_PAIRINGS = [(1,16),(8,9),(5,12),(4,13),(6,11),(3,14),(7,10),(2,15)]
-REGIONS = ["South", "East", "West", "Midwest"]
-ESPN_POINTS = {1:10, 2:20, 3:40, 4:80, 5:160, 6:320}
+# REGIONS, ESPN_ROUND_POINTS, SEED_PAIRINGS imported from config
+ESPN_POINTS = ESPN_ROUND_POINTS  # local alias used throughout this file
 
 
 # ── Data loading ─────────────────────────────────────────────────────────────

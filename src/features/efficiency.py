@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DIR, LUCK_COEFFICIENT
+from config import PROCESSED_DIR, LUCK_COEFFICIENT, SEED_DIVERGENCE_CLIP
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
@@ -87,7 +87,11 @@ def compute_seed_divergence(
         Seed Divergence series (NaN for non-tournament teams).
     """
     implied = kenpom_rank.apply(kenpom_rank_to_implied_seed)
-    return actual_seed - implied
+    divergence = actual_seed - implied
+    # Clip to prevent extreme KenPom rank outliers from destabilizing LR coefficients
+    # e.g. a rank-200 team seeded 1 would produce -49 raw; clip to ±8 (2 seed lines)
+    lo, hi = SEED_DIVERGENCE_CLIP
+    return divergence.clip(lo, hi)
 
 
 def _join_kenpom(cbb: pd.DataFrame, kp: pd.DataFrame) -> pd.DataFrame:

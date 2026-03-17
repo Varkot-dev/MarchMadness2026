@@ -6,7 +6,7 @@
 ## What This Project Is
 
 A machine learning system that predicts NCAA March Madness tournament outcomes
-and generates three optimized bracket submissions for a competitive bracket pool.
+and generates optimized bracket submissions for a competitive bracket pool.
 
 This is being built to beat a specific competitor (Michael Licamele) who is also
 building a model using Claude Code. The edge comes from superior feature
@@ -15,8 +15,7 @@ not just a better base model.
 
 **Competition rules:**
 - 3 brackets each, average score determines the winner
-- ESPN bracket scoring (10pt R1, 20pt R2, 40pt S16, 80pt E8, 160pt F4, 320pt Champion)
-- Max possible score: 1920 points
+- ESPN bracket scoring (10pt R64, 20pt R32, 40pt S16, 80pt E8, 160pt F4, 320pt Champion)
 - Deadline: March 20, 2026 (Selection Sunday)
 - Pure model prediction — no manual overrides
 
@@ -42,36 +41,52 @@ Act as a **senior software engineer** at all times. This means:
 
 ```
 march-madness/
-├── CLAUDE.md                  ← You are here
-├── SKILLS.md                  ← Domain expertise, read this too
+├── CLAUDE.md                  <- You are here
+├── SKILLS.md                  <- Domain expertise, read this too
 ├── README.md
+├── generate_2025_bracket.py   <- Run to regenerate predicted_bracket_2025.csv
 ├── data/
-│   ├── raw/                   ← Never touch raw data after downloading
-│   ├── processed/             ← Cleaned, feature-engineered data
-│   └── external/kaggle/       ← Kaggle datasets (seeds, results, teams)
+│   ├── raw/                   <- Never touch raw data after downloading
+│   ├── processed/             <- Cleaned, feature-engineered data
+│   └── external/kaggle/       <- Kaggle datasets (seeds, results, teams)
 ├── src/
 │   ├── features/
-│   │   ├── efficiency.py      ← AdjEM, True Quality Score, Luck correction
-│   │   ├── momentum.py        ← Quality Momentum Score
-│   │   ├── coaching.py        ← Coaching Premium + CBB_TO_KAGGLE_NAMES map
-│   │   └── starpower.py       ← NBA prospect depth scoring
+│   │   ├── efficiency.py      <- TQS, Seed Divergence (clipped +-8), Luck correction
+│   │   ├── momentum.py        <- Quality Momentum Score (Torvik game-by-game)
+│   │   ├── coaching.py        <- Coaching Premium + CBB_TO_KAGGLE_NAMES map
+│   │   └── starpower.py       <- NBA prospect depth scoring
 │   ├── models/
-│   │   ├── win_probability.py ← Layer 1: LR + XGBoost win probability
-│   │   ├── formula_model.py   ← Explicit formula model (backtest + holdout)
-│   │   ├── simulator.py       ← Layer 2: Dynamic Monte Carlo simulator
-│   │   └── optimizer.py       ← Layer 3: Multi-bracket DP optimizer
+│   │   ├── win_probability.py <- Layer 1: LR + XGBoost, fitted sigma, vectorized matrix
+│   │   ├── formula_model.py   <- Explicit formula: SCORE(T) = sum(wi * feature_i(T))
+│   │   ├── simulator.py       <- Layer 2: Monte Carlo simulator (imports from config)
+│   │   └── optimizer.py       <- Layer 3: Chalk/Medium/Chaos bracket optimizer
 │   ├── evaluation/
-│   │   └── backtest.py        ← Per-year backtest with dynamic round detection
+│   │   └── backtest.py        <- Per-year backtest with dynamic round detection
 │   └── output/
-│       ├── brackets.py        ← Final bracket generation and export
-│       └── visualizer.py      ← Matplotlib bracket visualizer
+│       ├── brackets.py        <- Final bracket generation and export
+│       └── visualizer.py      <- Matplotlib bracket visualizer
 ├── ui/
-│   ├── app.py                 ← Flask web app (python -m ui.app → :5050)
-│   └── templates/index.html   ← Interactive bracket visualizer
+│   ├── app.py                 <- Flask web app (python -m ui.app -> :5050)
+│   └── templates/index.html   <- Interactive bracket visualizer UI
 ├── tests/
 │   └── test_features.py
-├── config.py                  ← All constants, paths, hyperparameters
+├── config.py                  <- ALL shared constants live here — import, never redefine
 └── requirements.txt
+```
+
+---
+
+## config.py Is the Single Source of Truth
+
+All shared constants are defined **once** in `config.py` and imported everywhere else.
+Never redefine these in other files:
+
+```python
+ESPN_ROUND_POINTS     # {1:10, 2:20, 3:40, 4:80, 5:160, 6:320}
+SEED_PAIRINGS         # [(1,16),(8,9),(5,12),(4,13),(6,11),(3,14),(7,10),(2,15)]
+REGIONS               # ["South", "East", "West", "Midwest"]
+FIRST_FOUR_2025       # Real Selection Sunday play-in matchups
+SEED_DIVERGENCE_CLIP  # (-8, 8) — prevents extreme KenPom outliers
 ```
 
 ---
@@ -80,11 +95,11 @@ march-madness/
 
 - **Python 3.11+**
 - **pandas** — data wrangling
-- **scikit-learn** — baseline models, preprocessing
-- **XGBoost / LightGBM** — primary model
-- **scipy** — statistical utilities
+- **scikit-learn** — LR baseline, StandardScaler, calibration
+- **XGBoost** — margin prediction model (install: `pip install xgboost`)
+- **scipy** — sigmoid, normal CDF for margin-to-probability conversion
+- **Flask** — web UI backend
 - **matplotlib / seaborn** — visualization
-- **requests / beautifulsoup4** — data fetching if needed
 - **pathlib** — all file paths (never use os.path)
 - **pytest** — testing
 
@@ -98,104 +113,125 @@ march-madness/
 
 2. **Optimize for bracket score, not accuracy.** A model that correctly
    identifies high-value upsets is more valuable than one that is 2% more
-   accurate at picking chalk winners. Keep this in mind when evaluating models.
+   accurate at picking chalk winners.
 
-3. **Three brackets must have different entropy levels.** Never generate
-   three nearly-identical brackets. The three entries must be:
-   - Entry 1 (Chalk): maximize per-game probability
-   - Entry 2 (Medium): moderate upsets where model diverges from seed
-   - Entry 3 (Chaos): high-value upsets where model and market diverge most
+3. **Three brackets must have different entropy levels:**
+   - Entry 1 (Chalk): maximize per-game probability via downstream expected score
+   - Entry 2 (Medium): moderate upsets where P(dog) >= 35% AND Seed Divergence > 0
+   - Entry 3 (Chaos): high-value upsets weighted by Seed Divergence (P(dog) >= 25% adjusted)
 
-4. **Validate on held-out years before trusting any result.** If a model
-   cannot be validated on at least 3 prior tournaments, do not trust it.
+4. **Validate on held-out years before trusting any result.** Minimum 3 prior seasons.
+
+5. **Import constants from config.py.** Never duplicate ESPN_ROUND_POINTS, SEED_PAIRINGS,
+   or REGIONS in any other file.
 
 ---
 
 ## Data Sources
 
 - **Kaggle March Mania** — primary training data, free, historical from 1985
-  URL: https://www.kaggle.com/competitions/march-machine-learning-mania-2025
 - **KenPom** — efficiency metrics (kenpom.com), partial free access
 - **Bart Torvik** — free KenPom alternative (barttorvik.com), scrapeable
-- **Sports-Reference** — coaching records, historical data (sports-reference.com/cbb)
+- **Sports-Reference** — coaching records (sports-reference.com/cbb)
 - **ESPN** — NBA draft board for prospect depth feature
 
 ---
 
-## Where We Are
+## Current State (as of March 2026)
 
-**All three layers are built and validated on holdout years (2022–2024).**
+### Formula Model (`src/models/formula_model.py`) — PRIMARY PREDICTION ENGINE
 
-### Layer 1 — Win Probability (`src/models/win_probability.py`)
-- Logistic Regression with Elastic Net + XGBoost margin model
-- Temporal CV (trained on prior years only, no leakage): ~75% accuracy
-- Outputs: `win_prob_matrix_{year}.csv` — 68×68 pairwise win probabilities
+The explicit learned formula that replaced the original chalk/medium/chaos heuristic approach:
 
-### Layer 2 — Monte Carlo Simulator (`src/models/simulator.py`)
-- Fully dynamic: loads any year's bracket from `MNCAATourneySeeds.csv`
-- No hardcoded team names or bracket structures
-- 10,000 simulations, selects p90-maximizing bracket
-
-### Layer 3 — Multi-Bracket Optimizer (`src/models/optimizer.py`)
-- Generates 3 brackets: Chalk / Medium / Chaos entropy levels
-
-### Formula Model (`src/models/formula_model.py`)
-- Explicit learned formula: `score(T) = w1*TQS + w2*QMS + ...`
-- `P(A beats B) = sigmoid(score_A - score_B)`
-- Trained on 2013–2021, validated on holdout years 2022–2024
-- **Holdout results (corrected, never seen in training):**
-  - 2022: 580/1920 ESPN (champion wrong — Houston predicted, Kansas won)
-  - 2023: 1190/1920 ESPN (champion ✓ Connecticut)
-  - 2024: 1460/1920 ESPN (champion ✓ Connecticut)
-  - Mean: 1077/1920 (56% of max possible)
-
-### Backtester (`src/evaluation/backtest.py`)
-- Per-year pipeline: train on prior years → sim → score vs actual
-- Dynamic DayNum→round mapping (handles all years including 2021 bubble)
-- `python -m src.evaluation.backtest --year 2024` or `--all`
-
-### Bracket Visualizer
-- `src/output/visualizer.py` — matplotlib static bracket PNG
-- `ui/` — Flask web app + HTML bracket visualizer at `http://localhost:5050`
-- `python -m ui.app` to launch
-
-### Data Files
-- `data/external/kaggle/MNCAATourneySeeds.csv` — bracket structure (1985–2024)
-- `data/external/kaggle/MNCAATourneyDetailedResults.csv` — game results
-- `data/external/kaggle/MConferenceTourneyGames.csv` — conf tourney games
-- `data/processed/features_coaching.csv` — full feature matrix (2013–2025)
-- `data/processed/formula_weights.csv` — current model formula
-- `data/processed/predicted_bracket_{2022,2023,2024}.csv` — holdout predictions
-
-### Current Model Formula
 ```
-SCORE(T) = 0.160 × SEED_DIVERGENCE + 0.130 × TRUE_QUALITY_SCORE
+SCORE(T) = sum(wi * feature_i(T))
 P(A beats B) = sigmoid( SCORE(A) - SCORE(B) )
 ```
-Where `SEED_DIVERGENCE = actual_seed - KenPom_implied_seed` (positive = underseeded).
 
-### Known Issues / Next Steps
-- **2022 was badly wrong** — Houston predicted, Kansas won. Only 3 holdout years is
-  insufficient to trust the model fully. Need more data to establish confidence.
-- **No tournament experience feature yet** — known predictor (prior tournament minutes
-  by current roster), described in SKILLS.md Feature 6. Not yet built.
-- **No NBA Prospect Depth feature** — described in SKILLS.md Feature 5. Not yet built.
-- **QMS and COACH_PREMIUM are built but excluded** — dropped due to collinearity/noise
-  with current sample size. Re-test with 2026 data — may become useful.
-- **XGBoost installed but not validated to improve** — LR with 2 features currently wins
-- **Competition deadline: March 20, 2026 (Selection Sunday)**
+Weights are learned from logistic regression (elastic net, C=0.1) on 2013-2021 data.
+Top features by impact (see `data/processed/formula_weights.csv`):
+1. SEED_DIVERGENCE     — most important, positive weight (underseeded teams win more)
+2. TRUE_QUALITY_SCORE  — second most important
+3. ADJOE / ADJDE
+4. WAB, SEED, COACH_PREMIUM, QMS, ORB, TOR
 
-### Two Claude Instances Working Simultaneously
-This project is being developed by two parallel Claude Code instances. At the start
-of every session, always run `git status` and read any new files before making changes.
-The CLAUDE.md and SKILLS.md files are the shared source of truth.
+**Holdout results (2022-2024, never seen in training):**
+- 2022: ESPN 720  — Houston predicted, Kansas won (wrong)
+- 2023: ESPN 1320 — Connecticut predicted and won (correct)
+- 2024: ESPN 1570 — Connecticut predicted and won (correct)
+- Mean: 1203/1920 (63% of max), champion accuracy 2/3
+
+### 2025 Live Prediction
+- Trained on all available data: 2013-2024 (11 seasons, excl. 2020 COVID)
+- Real Selection Sunday bracket hard-coded in `generate_2025_bracket.py`
+- **Predicted 2025 champion: Florida**
+- Notable upset picks: McNeese St. over Memphis, Baylor over Mississippi St.
+- First Four results resolved via model win probability
+- Output: `data/processed/predicted_bracket_2025.csv`
+
+### Layer 1 — Win Probability (`src/models/win_probability.py`)
+- LR + XGBoost ensemble
+- Sigma for margin-to-probability conversion is now **fitted from training data** per fold
+  (was hardcoded at 10.5 — now calibrated to the actual spread of tournament results)
+- `build_win_prob_matrix()` is **vectorized**: single batch predict_proba call instead of
+  4,624 individual DataFrame filter lookups (much faster)
+- Output: `data/processed/win_prob_matrix_{year}.csv`
+
+### Layer 2 — Monte Carlo Simulator (`src/models/simulator.py`)
+- Fully dynamic: loads bracket from Kaggle MNCAATourneySeeds.csv for any year
+- ESPN_ROUND_POINTS and SEED_PAIRINGS imported from config (not redefined locally)
+- 10,000 simulations, selects p90-maximizing bracket
+
+### Layer 3 — Optimizer (`src/models/optimizer.py`)
+- Was completely broken (missing imports, wrong function signatures) — now fixed
+- Imports ESPN_ROUND_POINTS, REGIONS, FIRST_FOUR_2025 from config
+- `_build_bracket_structure_2025()` provides hardcoded 2025 Selection Sunday fallback
+  when Kaggle seed file doesn't have 2025 data yet
+- Run: `python -m src.models.optimizer`
+
+### Feature Engineering Notes
+- **Seed Divergence** clipped to +-8 to prevent extreme KenPom outliers from
+  destabilizing LR weights (raw values could previously reach +-49)
+- **True Quality Score** = AdjEM - (Luck * 0.4), falls back to ADJOE-ADJDE if no KenPom
+- **QMS** from Torvik game-by-game data; years without Torvik CSV get QMS=0 (known limitation)
+- **Coach Premium** uses CBB_TO_KAGGLE_NAMES map in coaching.py for team name bridging
+
+### Web UI (`ui/app.py` + `ui/templates/index.html`)
+- Launch: `python -m ui.app` -> http://localhost:5050
+- Regions color-coded (South=blue, East=purple, West=orange, Midwest=teal)
+- Green/red left-border stripes on team slots for correct/wrong picks (holdout years)
+- Click any game -> sidebar: animated probability bar, model vs actual, feature comparison table
+- Formula button -> model weights as bar charts + per-year CV accuracy
+- `_NaNSafeEncoder` on the Flask app handles float NaN->null globally in all JSON responses
+- Invalid year requests return HTTP 400 with a clear list of available years
+
+### Key Processed Files
+- `data/processed/features_coaching.csv`              — full feature matrix (2013-2025)
+- `data/processed/formula_weights.csv`                — learned formula coefficients
+- `data/processed/formula_cv_results.csv`             — temporal CV per fold
+- `data/processed/win_prob_matrix_2025.csv`           — 68x68 pairwise probabilities
+- `data/processed/predicted_bracket_{2022,2023,2024,2025}.csv` — bracket predictions
+
+---
+
+## Known Gaps / Next Improvements
+
+- **XGBoost not installed on this machine** — LR-only currently; `pip install xgboost` to enable
+- **QMS degrades silently** when Torvik CSV is missing for a year (gets QMS=0 with a log warning)
+- **No tournament experience feature** — prior March Madness minutes played is a known
+  predictor not yet implemented
+- **No unit tests for models** — tests/ only covers features; simulator/optimizer/formula_model
+  have no test coverage
+- **2022 champion badly wrong** — model missed Kansas entirely; worth investigating what
+  features would have differentiated Kansas from Houston that year
 
 ---
 
 ## How to Work With Me
 
-- When I ask you to build something, read SKILLS.md first for domain context
-- Always tell me what you're about to do before doing it
+- Read SKILLS.md first for domain context before building any feature
+- Always tell me what you are about to do before doing it
 - If something will take multiple steps, outline the steps first
 - When you write a function, also write a quick test or usage example
 - If I ask for something that conflicts with the critical rules above, flag it
+- Import constants from config.py — never redefine them

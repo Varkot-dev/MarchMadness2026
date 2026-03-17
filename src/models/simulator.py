@@ -34,21 +34,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import EXTERNAL_DIR, PROCESSED_DIR
+from config import EXTERNAL_DIR, PROCESSED_DIR, ESPN_ROUND_POINTS, SEED_PAIRINGS
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-
-ESPN_ROUND_POINTS = {
-    1: 10,   # Round of 64
-    2: 20,   # Round of 32
-    3: 40,   # Sweet 16
-    4: 80,   # Elite 8
-    5: 160,  # Final Four
-    6: 320,  # Championship
-}
 
 # Kaggle region-letter → standard region name
 KAGGLE_REGION_MAP = {
@@ -57,11 +48,6 @@ KAGGLE_REGION_MAP = {
     "Y": "West",
     "Z": "Midwest",
 }
-
-# Standard NCAA bracket first-round seed pairings within a region.
-# Each tuple is (higher_seed, lower_seed) — order matches the bracket pod
-# so that the winner bracket correctly re-seeds pods together.
-SEED_PAIRINGS = [(1, 16), (8, 9), (5, 12), (4, 13), (6, 11), (3, 14), (7, 10), (2, 15)]
 
 
 # ── Bracket construction ───────────────────────────────────────────────────────

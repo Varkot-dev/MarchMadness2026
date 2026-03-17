@@ -12,9 +12,20 @@ This model solves the right problem: **maximize expected score of the
 best bracket across three entries under ESPN's top-heavy scoring system.**
 
 These are fundamentally different objectives. A model that correctly
-identifies a 12-over-5 upset worth 1 point AND correctly picks the
-champion worth 32 points is dramatically more valuable than a model
+identifies a 12-over-5 upset worth 10 points AND correctly picks the
+champion worth 320 points is dramatically more valuable than a model
 that is 3% more accurate at picking chalk Round 1 games.
+
+**ESPN Bracket Scoring (correct values):**
+| Round | Points |
+|-------|--------|
+| R64 (Round 1) | 10 |
+| R32 (Round 2) | 20 |
+| S16 (Sweet 16) | 40 |
+| E8 (Elite 8) | 80 |
+| F4 (Final Four) | 160 |
+| Champion | 320 |
+Maximum possible score: **1920 points** (if all 63 games correct).
 
 Always keep this in mind when making modeling decisions.
 
@@ -26,10 +37,19 @@ Always keep this in mind when making modeling decisions.
 **What it does:** Given any two teams, output P(team A wins) on a neutral court.
 
 **Inputs:** Feature vectors for both teams (see Feature Engineering below)
-**Model:** Start with logistic regression baseline, then XGBoost
-**Training:** Kaggle March Mania historical data, 2003-2025
+**Models:** Logistic Regression (primary) + XGBoost margin model (secondary)
+**Formula model alternative:** `P(A beats B) = σ(SCORE_A − SCORE_B)` where score is weighted feature sum
+**Training:** Kaggle March Mania historical data, 2013–2024 (excl. 2020 COVID year)
 **Validation:** ALWAYS split by season year, never random split
 **Output:** Float [0.0, 1.0] representing win probability
+
+**Implemented files:**
+- `src/models/win_probability.py` — LR + XGBoost, loso_cv(), temporal_cv(), build_win_prob_matrix()
+- `src/models/formula_model.py` — formula-based model with interpretable weights
+
+**Current performance (temporal CV, 2016–2024):**
+- Logistic Regression: **77.5% accuracy, 0.468 log loss**
+- Formula model: similar range
 
 ### Layer 2: Monte Carlo Tournament Simulator
 **What it does:** Simulate the full 64-team bracket thousands of times
@@ -45,6 +65,8 @@ to build a probability distribution over all possible outcomes.
 **Key insight:** This captures path dependency. A team might face an
 easy path to the Elite 8 based on how the bracket sets up. The simulator
 accounts for this automatically.
+
+**Implemented file:** `src/models/simulator.py`
 
 ### Layer 3: Multi-Bracket DP Optimizer
 **What it does:** Given the probability map from Layer 2, construct three
@@ -64,6 +86,23 @@ entropy across entries.
 - **Chaos bracket:** Pick high-value upsets where model probability
   AND market (betting odds) both undervalue the underdog. Low floor,
   high ceiling. This is the lottery ticket entry.
+
+**Implemented file:** `src/models/optimizer.py`
+
+---
+
+## Validated Holdout Results
+
+| Year | Predicted Champion | Actual | ESPN Score | % of Max |
+|------|--------------------|--------|------------|----------|
+| 2022 | Houston | Kansas ✗ | 720/1920 | 37.5% |
+| 2023 | **Connecticut** | Connecticut ✓ | 1320/1920 | 68.8% |
+| 2024 | **Connecticut** | Connecticut ✓ | 1570/1920 | 81.8% |
+| Mean | — | 2/3 correct | 1203/1920 | 62.7% |
+
+CV performance (temporal, training years 2016–2021): **77.5% accuracy, 0.468 log loss**
+
+**2025 Live Prediction:** Model predicts **Florida** as champion (trained on all 2013–2024 data).
 
 ---
 
@@ -91,6 +130,8 @@ their seed. Positive divergence = underseeded = potential sleeper.
 divergence = 4 - 1 = +3 (positive = underseeded = upset threat). The old
 formula was inverted and has been corrected in the codebase.
 **Validated weight:** +0.160 in the final model (positive = underseeded teams win more)
+**Clipping:** Raw values can reach ±49; clip to ±8 (2 seed lines) to prevent LR instability.
+`SEED_DIVERGENCE_CLIP = (-8, 8)` lives in `config.py`.
 
 ### Feature 3: Quality Momentum Score
 **Formula:** For last 10 games before tournament:
@@ -141,8 +182,15 @@ specifically in rounds 3 and beyond (Sweet 16+).
 **Implementation:** Pull each player's career tournament minutes from
 Sports-Reference. Sum across the current roster.
 
+### Feature 7: Adjusted Defensive Efficiency (AdjDE / KENPOM_DRTG)
+Partially independent from TQS. Use selectively — test for collinearity before including.
+
+### Features NOT yet built (future work)
+- **2-point % allowed** — interior defense, most predictive in recent models
+- **Free throw rate mismatch** — if team relies on FTs vs opponent that doesn't foul
+- **Non-conference SOS (NCSOS)** — reveals how seriously coach prepares for March
+
 ### Standard KenPom Features (Use Selectively — Collinearity Warning)
-- AdjD (Adjusted Defensive Efficiency) — partially independent from TQS, worth testing
 - AdjT (Adjusted Tempo)
 - 2-point shooting % allowed (interior defense — most predictive in recent models)
 - Free throw rate mismatch (if team relies on FTs vs opponent that doesn't foul)
@@ -184,6 +232,8 @@ Based on historical data since 2002:
 - Not heavily reliant on 3-point shooting for offense (high variance in tournament)
 - Coach with positive tournament premium
 
+**2025 model pick:** Florida (1-seed West) — top KenPom rank, strong TQS, positive coaching premium.
+
 Use this profile to weight championship probability in the simulator.
 
 ---
@@ -196,22 +246,11 @@ Before trusting any model output:
 2. **Minimum validation:** Test on at least 3 separate tournament years
 3. **Metric to optimize:** Expected bracket score, not log-loss or accuracy
 4. **Baseline to beat:** Simple seed-based model (pick higher seed every game)
-   typically scores ~120/192 possible points. Any model must beat this.
+   typically scores ~120/192 possible points under old scoring. Any model must beat this.
 5. **Secondary metric:** Correct Final Four picks per tournament year
 6. **DayNum → round mapping:** Never hardcode. Use `_build_daynum_to_round()` in
    `src/evaluation/backtest.py` — it infers rounds dynamically from game counts
    per day and works correctly across all years including the 2021 bubble.
-
-## Validated Holdout Results (2022–2024, never seen in training)
-
-| Year | Predicted Champion | Actual | ESPN Score | % of Max |
-|------|--------------------|--------|------------|----------|
-| 2022 | Houston | Kansas ✗ | 610/1920 | 32% |
-| 2023 | **Connecticut** | Connecticut ✓ | 1190/1920 | 62% |
-| 2024 | **Connecticut** | Connecticut ✓ | 1450/1920 | 76% |
-| Mean | — | 2/3 correct | 1083/1920 | 56% |
-
-CV performance (temporal, training years 2016–2021): **77.5% accuracy, 0.468 log loss**
 
 ---
 
@@ -229,6 +268,11 @@ CV performance (temporal, training years 2016–2021): **77.5% accuracy, 0.468 l
 - **Using `implied - actual` for Seed Divergence** — sign is inverted; use `actual - implied`
 - **Reporting ESPN scores without validating the round detection** — off-by-one DayNum bugs
   make scores look much higher than they are (we caught a 110-point inflation in 2024)
+- **Not clipping Seed Divergence** — raw values hit ±49, must clip to ±8 (`SEED_DIVERGENCE_CLIP` in config.py)
+- **Hardcoding sigma=10.5 for XGBoost margin model** — fit sigma from training data per fold using `fit_margin_sigma()`
+- **Defining ESPN_ROUND_POINTS, SEED_PAIRINGS, REGIONS locally** — import from `config.py` (single source of truth)
+- **Using loop over DataFrame rows for win probability matrix** — vectorize: build all pairwise diffs, single `predict_proba` call
+- **Expecting Kaggle seed data for current year** — Kaggle lags by months; hardcode bracket from Selection Sunday
 
 ---
 
@@ -250,6 +294,11 @@ CV performance (temporal, training years 2016–2021): **77.5% accuracy, 0.468 l
 - Player game logs: sports-reference.com/cbb/players
 - Be respectful with scraping — add delays between requests
 
+**Team name bridging:**
+- Kaggle uses its own TeamID system; CBB dataset uses different names
+- 166 games dropped historically due to name mismatch — maintain a name bridge table
+- Always use Kaggle TeamID as the primary key when joining across datasets
+
 ---
 
 ## File Naming Conventions
@@ -258,3 +307,17 @@ CV performance (temporal, training years 2016–2021): **77.5% accuracy, 0.468 l
 - All DataFrames: snake_case column names
 - Team IDs: always use Kaggle TeamID as the primary key for joining
 - Season year: always the year the tournament was played (2024 = 2023-24 season)
+
+---
+
+## Config.py — Single Source of Truth
+
+All shared constants live in `config.py`. Never redefine locally:
+
+```python
+ESPN_ROUND_POINTS = {1: 10, 2: 20, 3: 40, 4: 80, 5: 160, 6: 320}
+SEED_PAIRINGS = [(1,16),(8,9),(5,12),(4,13),(6,11),(3,14),(7,10),(2,15)]
+REGIONS = ["South", "East", "West", "Midwest"]
+SEED_DIVERGENCE_CLIP = (-8, 8)
+FIRST_FOUR_2025 = [...]  # 6 play-in games with real Selection Sunday matchups
+```

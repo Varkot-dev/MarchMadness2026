@@ -19,14 +19,31 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from flask import Flask, jsonify, render_template
+import json
 import pandas as pd
 import numpy as np
+
+
+class _NaNSafeEncoder(json.JSONEncoder):
+    """Replace float NaN/Inf with None so jsonify never emits invalid JSON."""
+    def iterencode(self, o, _one_shot=False):
+        return super().iterencode(self._clean(o), _one_shot)
+
+    def _clean(self, obj):
+        if isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
+            return None
+        if isinstance(obj, dict):
+            return {k: self._clean(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._clean(v) for v in obj]
+        return obj
 
 from config import PROCESSED_DIR, EXTERNAL_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
 app = Flask(__name__)
+app.json_encoder = _NaNSafeEncoder
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -93,14 +110,7 @@ def load_predicted_bracket(year: int) -> list[dict] | None:
     if not path.exists():
         return None
     df = pd.read_csv(path)
-    # Convert NaN to None for JSON serialization (float NaN breaks jsonify)
-    records = []
-    for row in df.to_dict("records"):
-        records.append({
-            k: (None if (isinstance(v, float) and np.isnan(v)) else v)
-            for k, v in row.items()
-        })
-    return records
+    return df.to_dict("records")  # NaN handled by _NaNSafeEncoder at response time
 
 
 def load_features_for_year(year: int) -> dict[str, dict]:
@@ -317,6 +327,8 @@ def api_bracket(year: int):
     """
     Return full bracket data for a given year.
 
+    Returns 400 if the year has no available data.
+
     For 2022–2024: loads pre-computed predictions from formula_model.py.
     For 2025: simulates from the win probability matrix.
 
@@ -329,6 +341,10 @@ def api_bracket(year: int):
       - cv_results: temporal CV metrics
       - year_label: 'holdout' or 'live'
     """
+    valid_years = get_available_years()
+    if year not in valid_years:
+        return jsonify({"error": f"Year {year} not available. Valid years: {valid_years}"}), 400
+
     matchups = load_predicted_bracket(year)
     is_holdout = year in HOLDOUT_YEARS
 

@@ -15,7 +15,8 @@ not just a better base model.
 
 **Competition rules:**
 - 3 brackets each, average score determines the winner
-- ESPN bracket scoring (1pt R1, 2pt R2, 4pt S16, 8pt E8, 16pt F4, 32pt Champion)
+- ESPN bracket scoring (10pt R1, 20pt R2, 40pt S16, 80pt E8, 160pt F4, 320pt Champion)
+- Max possible score: 1920 points
 - Deadline: March 20, 2026 (Selection Sunday)
 - Pure model prediction — no manual overrides
 
@@ -166,13 +167,28 @@ march-madness/
 - `data/processed/formula_weights.csv` — current model formula
 - `data/processed/predicted_bracket_{2022,2023,2024}.csv` — holdout predictions
 
+### Current Model Formula
+```
+SCORE(T) = 0.160 × SEED_DIVERGENCE + 0.130 × TRUE_QUALITY_SCORE
+P(A beats B) = sigmoid( SCORE(A) - SCORE(B) )
+```
+Where `SEED_DIVERGENCE = actual_seed - KenPom_implied_seed` (positive = underseeded).
+
 ### Known Issues / Next Steps
-- **XGBoost not installed** — LR-only for now; adding XGBoost should improve ~2%
-- **Feature sign audit needed** — SEED_DIVERGENCE weight may have sign issues
-- **No tournament experience feature** — known predictor not yet added
-- **2022 was badly wrong** — Houston predicted, Kansas won; model missed badly in off years
-- **Needs full multi-year backtest** to establish reliable confidence interval
+- **2022 was badly wrong** — Houston predicted, Kansas won. Only 3 holdout years is
+  insufficient to trust the model fully. Need more data to establish confidence.
+- **No tournament experience feature yet** — known predictor (prior tournament minutes
+  by current roster), described in SKILLS.md Feature 6. Not yet built.
+- **No NBA Prospect Depth feature** — described in SKILLS.md Feature 5. Not yet built.
+- **QMS and COACH_PREMIUM are built but excluded** — dropped due to collinearity/noise
+  with current sample size. Re-test with 2026 data — may become useful.
+- **XGBoost installed but not validated to improve** — LR with 2 features currently wins
 - **Competition deadline: March 20, 2026 (Selection Sunday)**
+
+### Two Claude Instances Working Simultaneously
+This project is being developed by two parallel Claude Code instances. At the start
+of every session, always run `git status` and read any new files before making changes.
+The CLAUDE.md and SKILLS.md files are the shared source of truth.
 
 ---
 

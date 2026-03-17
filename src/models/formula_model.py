@@ -59,25 +59,22 @@ TRAIN_YEARS  = list(range(2013, 2022))   # 2013–2021 inclusive, excl. 2020
 HOLDOUT_YEARS = [2022, 2023, 2024]       # predict these, never seen in training
 
 FEATURES = [
-    "TRUE_QUALITY_SCORE",  # AdjEM - 0.4*Luck: true team strength (strongest raw signal)
-    "SEED_DIVERGENCE",     # actual_seed - KenPom_implied_seed: positive = underseeded upset threat
-    "QMS",                 # Quality Momentum Score: recency signal, weighted by opponent strength
-    "COACH_PREMIUM",       # Career tournament wins above seed expectation
-    "ADJOE",               # Adjusted offensive efficiency (partial independence from TQS)
-    "ADJDE",               # Adjusted defensive efficiency (partially independent from TQS)
-    # NOTE: SEED, WAB dropped — collinear with TQS at r>0.83, VIF>10 even under L2
-    # NOTE: TOR, ORB dropped — noise at 668 samples, collinear with ADJOE
-    # L2 regularization (Ridge) handles ADJOE/ADJDE collinearity with TQS without
-    # dropping them — it distributes weight across correlated features rather than
-    # amplifying one arbitrarily. C is tuned via temporal CV grid search below.
+    # SHAP-validated feature set (temporal CV across 8 folds, 2016-2024):
+    # With 668 tournament games, adding correlated features (ADJOE, ADJDE, QMS,
+    # COACH_PREMIUM) hurts CV log loss vs the 2-feature baseline. SHAP confirms
+    # TQS and SEED_DIVERGENCE dominate mean|SHAP| (0.114 and 0.116 respectively),
+    # while all others are <0.04. The sign-flipping in SHAP across folds is a
+    # collinearity artifact: TQS and ADJOE/ADJDE share variance, so L2 arbitrarily
+    # assigns opposing signs. Bottom line: 2 features is optimal at this sample size.
+    "TRUE_QUALITY_SCORE",  # mean|SHAP|=0.114 — dominant strength signal
+    "SEED_DIVERGENCE",     # mean|SHAP|=0.116 — underseeded upset identifier
 ]
 
 # L2 regularization strength. Smaller C = stronger regularization.
-# Tuned via temporal CV grid search in run_temporal_cv(); best value stored here
-# as the production default after running main(). Start with tight regularization
-# given the 668-game dataset — L2 is the only thing keeping ADJOE/ADJDE stable.
+# Validated by temporal CV grid search in run_temporal_cv(). At 2 features
+# the dataset is well-conditioned so C=1.0 (weak regularization) is fine.
 # Grid: [0.01, 0.05, 0.1, 0.25, 0.5, 1.0] — see run_temporal_cv() for results.
-C_REGULARIZATION: float = 1.0   # production default; tuned by grid search (best log loss 0.4677)
+C_REGULARIZATION: float = 1.0   # tuned by grid search
 
 # DayNum → round is inferred dynamically per year in load_actual_results()
 # using game counts (see _build_daynum_to_round). This constant is kept

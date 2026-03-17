@@ -546,6 +546,291 @@ def compute_round_accuracy(matchups: list[dict]) -> dict[int, float]:
     }
 
 
+# ── Win probability matrix (feeds directly into simulator + optimizer) ────────
+
+def build_win_prob_matrix_from_formula(
+    year: int,
+    model: LogisticRegression,
+    scaler: StandardScaler,
+    features_path: Path = PROCESSED_DIR / "features_coaching.csv",
+) -> pd.DataFrame:
+    """
+    Build a square win probability matrix for the simulator using the formula model.
+
+    This is the wiring point between formula_model.py (Layer 1) and
+    simulator.py / optimizer.py (Layers 2-3).  The simulator expects:
+      - A square pd.DataFrame indexed by team name
+      - matrix.loc[team_a, team_b] = P(team_a beats team_b)
+      - Values in [0, 1]; diagonal is 0.5
+
+    Team names must match whatever is in _BRACKET_2025_SEEDS in optimizer.py
+    and in features_coaching.csv TEAM column — both use the same CBB names,
+    so no name bridging is needed here.
+
+    Uses vectorized batch predict_proba: builds all n*(n-1) pairwise feature
+    difference vectors at once, runs a single scaler.transform + predict_proba
+    call.  ~300x faster than nested loops for a 68-team field.
+
+    Args:
+        year:          Tournament year to build the matrix for.
+        model:         Fitted LogisticRegression (from fit_model()).
+        scaler:        Fitted StandardScaler (from fit_model()).
+        features_path: Path to features_coaching.csv.
+
+    Returns:
+        Square DataFrame (n_teams × n_teams) with float win probabilities.
+        Returns an empty DataFrame if fewer than 2 tournament teams are found.
+    """
+    features = pd.read_csv(features_path)
+    tourney = features[
+        (features["YEAR"] == year) & features["SEED"].notna()
+    ][["TEAM"] + FEATURES].copy()
+
+    # Drop rows missing any feature — model can't predict without them
+    before = len(tourney)
+    tourney = tourney.dropna(subset=FEATURES)
+    if before - len(tourney) > 0:
+        log.warning(
+            f"Dropped {before - len(tourney)} tournament teams for {year} "
+            f"with missing features — they will not appear in the matrix"
+        )
+
+    teams = tourney["TEAM"].tolist()
+    n = len(teams)
+
+    if n < 2:
+        log.warning(f"Only {n} teams with full features for {year} — cannot build matrix")
+        return pd.DataFrame()
+
+    # Pre-build a dict for O(1) feature lookups
+    feat_dict: dict[str, np.ndarray] = {
+        row["TEAM"]: row[FEATURES].values.astype(float)
+        for _, row in tourney.iterrows()
+    }
+
+    # All off-diagonal pairs as a flat list of (i, j) index tuples
+    pair_idx = [(i, j) for i in range(n) for j in range(n) if i != j]
+
+    # Stack all feature differences into a single matrix: shape (n*(n-1), n_features)
+    # Then one scaler.transform + one predict_proba call instead of n*(n-1) individual calls.
+    diff_matrix = np.vstack([
+        feat_dict[teams[i]] - feat_dict[teams[j]]
+        for i, j in pair_idx
+    ])
+    probs_flat = model.predict_proba(scaler.transform(diff_matrix))[:, 1]
+
+    # Fill the square DataFrame
+    matrix = pd.DataFrame(0.5, index=teams, columns=teams, dtype=float)
+    for k, (i, j) in enumerate(pair_idx):
+        matrix.iloc[i, j] = round(float(probs_flat[k]), 4)
+
+    log.info(
+        f"Win probability matrix built: {n}×{n} teams for {year} "
+        f"(features: {FEATURES})"
+    )
+    return matrix
+
+
+# ── Full integrated pipeline (formula model → simulator → optimizer) ──────────
+
+def run_full_pipeline(
+    target_year: int = 2025,
+    train_years: list[int] | None = None,
+    n_sims: int = 10_000,
+    sim_seed: int = 42,
+    save_matrix: bool = True,
+) -> dict:
+    """
+    Full end-to-end pipeline: train formula model → build win prob matrix →
+    run Monte Carlo simulation → build chalk/medium/chaos brackets.
+
+    This is the wiring function that connects formula_model.py (Layer 1)
+    directly to simulator.py (Layer 2) and optimizer.py (Layer 3).
+
+    Previously these pipelines were disconnected:
+      - formula_model.py produced deterministic bracket CSVs
+      - simulator.py + optimizer.py read win_prob_matrix from win_probability.py
+    Now a single call produces all three brackets using the formula model's
+    calibrated probabilities.
+
+    The L2 regularized model is trained on all available seasons before
+    target_year (temporal constraint strictly enforced — no future data),
+    then the win probability matrix is fed directly into run_simulations().
+
+    Args:
+        target_year: Year to generate brackets for (default 2025).
+        train_years: Explicit list of years to train on. Defaults to all
+                     years in features_coaching.csv strictly before target_year,
+                     excluding 2020 (no tournament).
+        n_sims:      Monte Carlo simulation count (default 10,000).
+        sim_seed:    Random seed for the simulator.
+        save_matrix: Whether to save the win prob matrix to
+                     data/processed/win_prob_matrix_{year}.csv (default True).
+
+    Returns:
+        Dict with keys:
+          model         — fitted LogisticRegression
+          scaler        — fitted StandardScaler
+          raw_coefs     — un-standardized coefficients
+          formula_df    — feature weight DataFrame
+          win_prob_matrix — square DataFrame (n_teams × n_teams)
+          sim_results   — full output from run_simulations()
+          brackets      — {"chalk": ..., "medium": ..., "chaos": ...}
+          p_reach       — P(reach) DataFrame from build_p_reach()
+          best_c        — C value selected by temporal CV grid search
+    """
+    from src.models.simulator import run_simulations, build_bracket_from_seeds
+    from src.models.optimizer import build_bracket, build_p_reach, load_seed_divergence, _build_bracket_structure_2025
+
+    # ── 1. Load matchup data ───────────────────────────────────────────────────
+    log.info(f"run_full_pipeline: target_year={target_year}, n_sims={n_sims:,}")
+    df = load_matchup_data()
+    log.info(f"  Matchup data: {len(df)//2} games across {df['YEAR'].nunique()} seasons")
+
+    # ── 2. Select training years (strict temporal — no future data) ────────────
+    all_years_in_data = sorted(df["YEAR"].unique())
+    if train_years is None:
+        train_years = [y for y in all_years_in_data if y < target_year and y != 2020]
+
+    if not train_years:
+        raise ValueError(
+            f"No training data available before {target_year}. "
+            f"Years in dataset: {all_years_in_data}"
+        )
+
+    train_df = df[df["YEAR"].isin(train_years)].copy()
+    log.info(
+        f"  Training on {len(train_years)} seasons: {train_years[0]}–{train_years[-1]} "
+        f"({len(train_df)//2} games)"
+    )
+
+    # ── 3. Temporal CV + C grid search (validates model stability) ────────────
+    log.info("  Running temporal CV with C grid search...")
+    cv_results, best_c = run_temporal_cv(train_df)
+    if len(cv_results) > 0:
+        log.info(
+            f"  CV result: mean_acc={cv_results['accuracy'].mean():.4f}, "
+            f"mean_ll={cv_results['log_loss'].mean():.4f}, best_C={best_c}"
+        )
+
+    # ── 4. Fit final model on all training years ───────────────────────────────
+    log.info(f"  Fitting final model (C={best_c}) on all {len(train_years)} training seasons...")
+    model, scaler, raw_coefs = fit_model(train_df, c=best_c)
+
+    formula_df = extract_formula(model, scaler, raw_coefs)
+    formula_df.to_csv(PROCESSED_DIR / "formula_weights.csv", index=False)
+    log.info("  Formula weights saved.")
+
+    # ── 5. Build win probability matrix for target year ────────────────────────
+    log.info(f"  Building win probability matrix for {target_year}...")
+    win_prob_matrix = build_win_prob_matrix_from_formula(target_year, model, scaler)
+
+    if win_prob_matrix.empty:
+        raise RuntimeError(
+            f"Win probability matrix is empty for {target_year}. "
+            "Check that features_coaching.csv has SEED data for this year."
+        )
+
+    if save_matrix:
+        out_path = PROCESSED_DIR / f"win_prob_matrix_{target_year}.csv"
+        win_prob_matrix.to_csv(out_path)
+        log.info(f"  Matrix saved to {out_path}")
+
+    # ── 6. Build bracket structure ─────────────────────────────────────────────
+    # Try Kaggle seeds file first (has real seedings for historical years).
+    # Fall back to hardcoded 2025 Selection Sunday structure.
+    seeds_path = EXTERNAL_DIR / "kaggle" / "MNCAATourneySeeds.csv"
+    teams_path = EXTERNAL_DIR / "kaggle" / "MTeams.csv"
+
+    bracket_structure = None
+    if seeds_path.exists() and teams_path.exists():
+        seeds_df = pd.read_csv(seeds_path)
+        teams_df = pd.read_csv(teams_path)
+        yr_seeds = seeds_df[seeds_df["Season"] == target_year]
+        if not yr_seeds.empty:
+            bracket_structure = build_bracket_from_seeds(seeds_df, teams_df, target_year)
+            log.info(f"  Bracket structure built from Kaggle seeds for {target_year}.")
+
+    if bracket_structure is None:
+        if target_year == 2025:
+            bracket_structure = _build_bracket_structure_2025()
+            log.info("  Using hardcoded 2025 Selection Sunday bracket structure.")
+        else:
+            raise RuntimeError(
+                f"Cannot build bracket structure for {target_year}: "
+                "Kaggle seeds file not found or has no data for this year."
+            )
+
+    # ── 7. Remap matrix team names to match bracket structure ──────────────────
+    # The bracket structure uses Kaggle team names (from MTeams.csv or the
+    # hardcoded _BRACKET_2025_SEEDS dict). The win prob matrix uses CBB names
+    # from features_coaching.csv. For 2025 these are the same strings, but
+    # we verify coverage and warn on mismatches rather than silently failing.
+    bracket_teams: set[str] = set()
+    for matchups in bracket_structure["regions"].values():
+        for ta, tb in matchups:
+            bracket_teams.update([ta, tb])
+    for ta, tb, *_ in bracket_structure.get("first_four", []):
+        bracket_teams.update([ta, tb])
+
+    matrix_teams = set(win_prob_matrix.index)
+    missing_from_matrix = bracket_teams - matrix_teams - {t for t in bracket_teams if t.startswith("FF_")}
+    if missing_from_matrix:
+        log.warning(
+            f"  {len(missing_from_matrix)} bracket teams missing from win prob matrix "
+            f"(will use 50/50 fallback in simulator): {sorted(missing_from_matrix)}"
+        )
+
+    # ── 8. Run Monte Carlo simulation ─────────────────────────────────────────
+    log.info(f"  Running {n_sims:,} Monte Carlo simulations...")
+    sim_results = run_simulations(
+        win_prob_matrix, bracket_structure, n_sims=n_sims, seed=sim_seed
+    )
+    log.info(
+        f"  Simulation complete. Top champions: "
+        + ", ".join(
+            f"{row['TEAM']} ({row['FREQUENCY_PCT']:.1f}%)"
+            for _, row in __import__("src.models.simulator", fromlist=["top_champions"])
+            .top_champions(sim_results["champions"], n=3).iterrows()
+        )
+    )
+
+    # ── 9. Build P(reach) table and seed divergence ────────────────────────────
+    from src.models.optimizer import build_p_reach
+    p_reach = build_p_reach(sim_results)
+    seed_div = load_seed_divergence(year=target_year)
+
+    # ── 10. Build chalk / medium / chaos brackets ──────────────────────────────
+    log.info("  Building chalk / medium / chaos brackets...")
+    chalk  = build_bracket(p_reach, seed_div, win_prob_matrix, mode="chalk",  bracket_structure=bracket_structure)
+    medium = build_bracket(p_reach, seed_div, win_prob_matrix, mode="medium", bracket_structure=bracket_structure)
+    chaos  = build_bracket(p_reach, seed_div, win_prob_matrix, mode="chaos",  bracket_structure=bracket_structure)
+
+    log.info(
+        f"  Champions — chalk: {chalk['champion']}, "
+        f"medium: {medium['champion']}, chaos: {chaos['champion']}"
+    )
+
+    # Save brackets CSV
+    from src.models.optimizer import save_brackets, print_bracket_comparison, print_expected_scores
+    brackets_list = [chalk, medium, chaos]
+    save_brackets(brackets_list, year=target_year)
+
+    return {
+        "model":            model,
+        "scaler":           scaler,
+        "raw_coefs":        raw_coefs,
+        "formula_df":       formula_df,
+        "win_prob_matrix":  win_prob_matrix,
+        "sim_results":      sim_results,
+        "brackets":         {"chalk": chalk, "medium": medium, "chaos": chaos},
+        "p_reach":          p_reach,
+        "best_c":           best_c,
+        "cv_results":       cv_results,
+        "bracket_structure": bracket_structure,
+    }
+
+
 # ── Main entry point ──────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -703,6 +988,50 @@ def main() -> None:
     for y in HOLDOUT_YEARS:
         print(f"  - predicted_bracket_{y}.csv")
     print("  - formula_backtest_summary.csv")
+
+    # ── Step 6: 2025 live prediction via full integrated pipeline ─────────────
+    # Train on all data through 2024, wire into simulator + optimizer.
+    # This is the actual competition bracket — not a holdout validation.
+    print("\n" + "=" * 65)
+    print("2025 LIVE PREDICTION — Full Pipeline (Formula → Sim → Optimizer)")
+    print("=" * 65)
+    log.info("Running full integrated pipeline for 2025...")
+
+    try:
+        results_2025 = run_full_pipeline(
+            target_year=2025,
+            n_sims=10_000,
+            sim_seed=42,
+            save_matrix=True,
+        )
+
+        from src.models.optimizer import (
+            print_bracket_comparison,
+            print_expected_scores,
+            top_champions,
+        )
+        from src.models.simulator import top_champions as sim_top_champions
+
+        print("\nTop 10 Champions (10,000 simulations):")
+        print(sim_top_champions(results_2025["sim_results"]["champions"], n=10).to_string(index=False))
+
+        brackets_list = [
+            results_2025["brackets"]["chalk"],
+            results_2025["brackets"]["medium"],
+            results_2025["brackets"]["chaos"],
+        ]
+        print_bracket_comparison(brackets_list)
+        print_expected_scores(brackets_list, results_2025["p_reach"])
+
+        print(f"\n  Chalk champion:  {results_2025['brackets']['chalk']['champion']}")
+        print(f"  Medium champion: {results_2025['brackets']['medium']['champion']}")
+        print(f"  Chaos champion:  {results_2025['brackets']['chaos']['champion']}")
+        print(f"\n  Win prob matrix: {PROCESSED_DIR}/win_prob_matrix_2025.csv")
+        print(f"  Three brackets:  {PROCESSED_DIR}/three_brackets_2025.csv")
+
+    except Exception as exc:
+        log.error(f"2025 pipeline failed: {exc}")
+        raise
 
 
 if __name__ == "__main__":

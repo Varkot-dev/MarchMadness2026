@@ -94,26 +94,31 @@ class TestComputeTrueQualityScore:
 
 class TestComputeSeedDivergence:
     def test_underseeded_positive(self):
-        """Team ranked 17th nationally but seeded 4 → implied seed 5, divergence +1."""
+        """Team ranked 17th nationally (implied seed 5) but given seed 4 → divergence = 4-5 = -1."""
+        # Formula: actual_seed - implied_seed. Rank 17 → ceil(17/4)=5. Actual=4. 4-5=-1.
+        # Negative here because the team is OVER-seeded (given seed 4, KenPom says 5).
         kenpom_rank = pd.Series([17.0])
         actual_seed = pd.Series([4.0])
         result = compute_seed_divergence(kenpom_rank, actual_seed)
-        assert result.iloc[0] == pytest.approx(5.0 - 4.0)
+        assert result.iloc[0] == pytest.approx(4.0 - 5.0)
 
     def test_overseeded_negative(self):
-        """Team ranked 9th nationally but seeded 1 → implied seed 3, divergence +2 (underseeded)."""
-        # Rank 9 → ceil(9/4) = 3.0 implied seed. Actual seed 1. Divergence = 3-1 = +2.
+        """Team ranked 9th nationally (implied seed 3) but seeded 1 → actual-implied = 1-3 = -2."""
+        # Rank 9 → ceil(9/4)=3.0 implied seed. Actual seed 1. Divergence = 1-3 = -2.
+        # Negative = overseeded (committee gave them a better seed than KenPom suggests).
         kenpom_rank = pd.Series([9.0])
         actual_seed = pd.Series([1.0])
         result = compute_seed_divergence(kenpom_rank, actual_seed)
-        assert result.iloc[0] == pytest.approx(3.0 - 1.0)
+        assert result.iloc[0] == pytest.approx(1.0 - 3.0)
 
-    def test_overseeded_true_negative(self):
-        """Team ranked 1st nationally but seeded 3 → implied seed 1, divergence -2 (overseeded)."""
+    def test_underseeded_true_positive(self):
+        """Team ranked 1st nationally (implied seed 1) but seeded 3 → actual-implied = 3-1 = +2."""
+        # Positive = underseeded (committee gave them a WORSE seed than KenPom suggests).
+        # These are upset threats — the model should favor them.
         kenpom_rank = pd.Series([1.0])
         actual_seed = pd.Series([3.0])
         result = compute_seed_divergence(kenpom_rank, actual_seed)
-        assert result.iloc[0] == pytest.approx(1.0 - 3.0)
+        assert result.iloc[0] == pytest.approx(3.0 - 1.0)
 
     def test_perfectly_seeded_zero(self):
         """Team ranked 1st nationally, seeded 1 → divergence 0."""

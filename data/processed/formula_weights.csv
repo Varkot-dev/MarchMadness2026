@@ -1,3 +1,8 @@
 feature,raw_weight,norm_weight,interpretation,feature_mean,feature_std
-SEED_DIVERGENCE,0.141269,0.546,positive = underseeded (KenPom ranks them better than seed),0.0,3.4267
-TRUE_QUALITY_SCORE,0.117446,0.454,higher = stronger team (AdjEM - 0.4*Luck),0.0,12.7861
+BARTHAG,-7.007818,-0.5666,Torvik power rating — P(beat average D1 team),0.0,0.1952
+EFF_RATIO,-4.89219,-0.3956,ADJOE / ADJDE — multiplicative efficiency balance,0.0,0.1445
+TRUE_QUALITY_SCORE,0.285874,0.0231,higher = stronger team (AdjEM - 0.4*Luck),0.0,12.7861
+DRB,0.074354,0.006,defensive rebounding rate — limits opponent second chances,0.0,4.0232
+ADJ_T,-0.038199,-0.0031,adjusted tempo (possessions per 40 min) — slower = deeper runs,0.0,3.8979
+FTR,-0.038532,-0.0031,free throw rate (FTA/FGA) — gets to the line consistently,0.0,6.0934
+3P_O,-0.03052,-0.0025,three-point shooting percentage — perimeter threat,0.0,3.6277

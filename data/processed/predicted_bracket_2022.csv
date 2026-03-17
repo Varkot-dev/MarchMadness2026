@@ -1,64 +1,64 @@
 year,region,round,round_name,team_a,team_b,seed_a,seed_b,prob_a,prob_b,predicted_winner,actual_winner,correct
-2022,South,1,R64,Arizona,Georgia St.,1,16,0.9524,0.0476,Arizona,Arizona,True
-2022,South,1,R64,Boise St.,Creighton,8,9,0.6223,0.3777,Boise St.,Creighton,False
-2022,South,1,R64,Connecticut,Indiana,5,12,0.6047,0.3953,Connecticut,,
-2022,South,1,R64,Arkansas,Akron,4,13,0.9146,0.0854,Arkansas,Arkansas,True
-2022,South,1,R64,Alabama,Virginia Tech,6,11,0.1947,0.8053,Virginia Tech,,
-2022,South,1,R64,Purdue,Colgate,3,14,0.9228,0.0772,Purdue,Purdue,True
-2022,South,1,R64,Michigan St.,Davidson,7,10,0.3416,0.6584,Davidson,Michigan St.,False
-2022,South,1,R64,Auburn,Cal St. Fullerton,2,15,0.9437,0.0563,Auburn,Auburn,True
-2022,South,2,R32,Arizona,Boise St.,1,8,0.8265,0.1735,Arizona,Arizona,True
-2022,South,2,R32,Connecticut,Arkansas,5,4,0.4715,0.5285,Arkansas,Arkansas,True
-2022,South,2,R32,Virginia Tech,Purdue,11,3,0.6619,0.3381,Virginia Tech,Purdue,False
-2022,South,2,R32,Davidson,Auburn,10,2,0.2846,0.7154,Auburn,,
-2022,South,3,S16,Arizona,Arkansas,1,4,0.6988,0.3012,Arizona,Arkansas,False
-2022,South,3,S16,Virginia Tech,Auburn,11,2,0.6367,0.3633,Virginia Tech,,
-2022,South,4,E8,Arizona,Virginia Tech,1,11,0.4484,0.5516,Virginia Tech,,
-2022,East,1,R64,Baylor,Wright St.,1,16,0.9718,0.0282,Baylor,Baylor,True
-2022,East,1,R64,North Carolina,Marquette,8,9,0.9133,0.0867,North Carolina,North Carolina,True
-2022,East,1,R64,Houston,UAB,5,12,0.9319,0.0681,Houston,Houston,True
-2022,East,1,R64,Illinois,Chattanooga,4,13,0.7785,0.2215,Illinois,Illinois,True
-2022,East,1,R64,Colorado St.,Michigan,6,11,0.1314,0.8686,Michigan,Michigan,True
-2022,East,1,R64,Tennessee,Longwood,3,14,0.964,0.036,Tennessee,Tennessee,True
-2022,East,1,R64,Murray St.,Loyola Chicago,7,10,0.313,0.687,Loyola Chicago,Murray St.,False
-2022,East,1,R64,Duke,Delaware,2,15,0.956,0.044,Duke,Duke,True
-2022,East,2,R32,Baylor,North Carolina,1,8,0.5642,0.4358,Baylor,North Carolina,False
-2022,East,2,R32,Houston,Illinois,5,4,0.8768,0.1232,Houston,Houston,True
-2022,East,2,R32,Michigan,Tennessee,11,3,0.3878,0.6122,Tennessee,Michigan,False
-2022,East,2,R32,Loyola Chicago,Duke,10,2,0.3103,0.6897,Duke,Duke,True
-2022,East,3,S16,Baylor,Houston,1,5,0.3259,0.6741,Houston,Houston,True
-2022,East,3,S16,Tennessee,Duke,3,2,0.4979,0.5021,Duke,Duke,True
-2022,East,4,E8,Houston,Duke,5,2,0.7253,0.2747,Houston,Duke,False
-2022,West,1,R64,Gonzaga,Norfolk St.,1,16,0.9834,0.0166,Gonzaga,Gonzaga,True
-2022,West,1,R64,San Diego St.,Memphis,8,9,0.4152,0.5848,Memphis,Memphis,True
-2022,West,1,R64,Iowa,Wyoming,5,12,0.9005,0.0995,Iowa,,
-2022,West,1,R64,Providence,South Dakota St.,4,13,0.6276,0.3724,Providence,Providence,True
-2022,West,1,R64,LSU,Notre Dame,6,11,0.5705,0.4295,LSU,Notre Dame,False
-2022,West,1,R64,Texas Tech,Montana St.,3,14,0.9685,0.0315,Texas Tech,Texas Tech,True
-2022,West,1,R64,Ohio St.,Miami FL,7,10,0.5478,0.4522,Ohio St.,Ohio St.,True
-2022,West,1,R64,Kentucky,Jacksonville St.,2,15,0.9623,0.0377,Kentucky,,
-2022,West,2,R32,Gonzaga,Memphis,1,9,0.7854,0.2146,Gonzaga,Gonzaga,True
-2022,West,2,R32,Iowa,Providence,5,4,0.8452,0.1548,Iowa,Providence,False
-2022,West,2,R32,LSU,Texas Tech,6,3,0.2564,0.7436,Texas Tech,Texas Tech,True
-2022,West,2,R32,Ohio St.,Kentucky,7,2,0.1995,0.8005,Kentucky,,
-2022,West,3,S16,Gonzaga,Iowa,1,5,0.7119,0.2881,Gonzaga,,
-2022,West,3,S16,Texas Tech,Kentucky,3,2,0.5372,0.4628,Texas Tech,,
-2022,West,4,E8,Gonzaga,Texas Tech,1,3,0.629,0.371,Gonzaga,,
-2022,Midwest,1,R64,Kansas,Texas Southern,1,16,0.9765,0.0235,Kansas,Kansas,True
-2022,Midwest,1,R64,Seton Hall,TCU,8,9,0.1731,0.8269,TCU,TCU,True
-2022,Midwest,1,R64,Saint Mary's,New Mexico St.,5,12,0.858,0.142,Saint Mary's,Saint Mary's,True
-2022,Midwest,1,R64,UCLA,Vermont,4,13,0.8523,0.1477,UCLA,UCLA,True
-2022,Midwest,1,R64,Texas,Iowa St.,6,11,0.7567,0.2433,Texas,Texas,True
-2022,Midwest,1,R64,Wisconsin,Yale,3,14,0.7166,0.2834,Wisconsin,Wisconsin,True
-2022,Midwest,1,R64,USC,San Francisco,7,10,0.134,0.866,San Francisco,,
-2022,Midwest,1,R64,Villanova,Saint Peter's,2,15,0.9039,0.0961,Villanova,Villanova,True
-2022,Midwest,2,R32,Kansas,TCU,1,9,0.7378,0.2622,Kansas,Kansas,True
-2022,Midwest,2,R32,Saint Mary's,UCLA,5,4,0.3151,0.6849,UCLA,UCLA,True
-2022,Midwest,2,R32,Texas,Wisconsin,6,3,0.8972,0.1028,Texas,,
-2022,Midwest,2,R32,San Francisco,Villanova,10,2,0.469,0.531,Villanova,Villanova,True
-2022,Midwest,3,S16,Kansas,UCLA,1,4,0.5633,0.4367,Kansas,Kansas,True
-2022,Midwest,3,S16,Texas,Villanova,6,2,0.5023,0.4977,Texas,Villanova,False
-2022,Midwest,4,E8,Kansas,Texas,1,6,0.6299,0.3701,Kansas,Kansas,True
-2022,Final Four,5,F4,Virginia Tech,Houston,11,5,0.3053,0.6947,Houston,,
-2022,Final Four,5,F4,Gonzaga,Kansas,1,1,0.6112,0.3888,Gonzaga,Kansas,False
-2022,Championship,6,Champ,Houston,Gonzaga,5,1,0.5543,0.4457,Houston,,
+2022,South,1,R64,Arizona,Wright St.,1,16,0.9259,0.0741,Arizona,Arizona,True
+2022,South,1,R64,Boise St.,Creighton,8,9,0.2637,0.7363,Creighton,Creighton,True
+2022,South,1,R64,Connecticut,UAB,5,12,0.7263,0.2737,Connecticut,,
+2022,South,1,R64,Arkansas,Akron,4,13,0.8421,0.1579,Arkansas,Arkansas,True
+2022,South,1,R64,Alabama,Virginia Tech,6,11,0.4503,0.5497,Virginia Tech,,
+2022,South,1,R64,Purdue,Colgate,3,14,0.8,0.2,Purdue,Purdue,True
+2022,South,1,R64,Michigan St.,Davidson,7,10,0.5845,0.4155,Michigan St.,Michigan St.,True
+2022,South,1,R64,Auburn,Cal St. Fullerton,2,15,0.8896,0.1104,Auburn,Auburn,True
+2022,South,2,R32,Arizona,Creighton,1,9,0.8028,0.1972,Arizona,Arizona,True
+2022,South,2,R32,Connecticut,Arkansas,5,4,0.6515,0.3485,Connecticut,Arkansas,False
+2022,South,2,R32,Virginia Tech,Purdue,11,3,0.5845,0.4155,Virginia Tech,Purdue,False
+2022,South,2,R32,Michigan St.,Auburn,7,2,0.1375,0.8625,Auburn,,
+2022,South,3,S16,Arizona,Connecticut,1,5,0.7192,0.2808,Arizona,,
+2022,South,3,S16,Virginia Tech,Auburn,11,2,0.2714,0.7286,Auburn,,
+2022,South,4,E8,Arizona,Auburn,1,2,0.5503,0.4497,Arizona,,
+2022,East,1,R64,Baylor,Texas Southern,1,16,0.9704,0.0296,Baylor,Baylor,True
+2022,East,1,R64,North Carolina,Marquette,8,9,0.3327,0.6673,Marquette,North Carolina,False
+2022,East,1,R64,Houston,Richmond,5,12,0.9448,0.0552,Houston,Houston,True
+2022,East,1,R64,Illinois,Chattanooga,4,13,0.56,0.44,Illinois,Illinois,True
+2022,East,1,R64,Colorado St.,Iowa St.,6,11,0.3685,0.6315,Iowa St.,Iowa St.,True
+2022,East,1,R64,Tennessee,Longwood,3,14,0.9702,0.0298,Tennessee,Tennessee,True
+2022,East,1,R64,Murray St.,Loyola Chicago,7,10,0.5216,0.4784,Murray St.,Murray St.,True
+2022,East,1,R64,Duke,Delaware,2,15,0.9504,0.0496,Duke,Duke,True
+2022,East,2,R32,Baylor,Marquette,1,9,0.8707,0.1293,Baylor,,
+2022,East,2,R32,Houston,Illinois,5,4,0.91,0.09,Houston,Houston,True
+2022,East,2,R32,Iowa St.,Tennessee,11,3,0.2099,0.7901,Tennessee,Iowa St.,False
+2022,East,2,R32,Murray St.,Duke,7,2,0.1363,0.8637,Duke,Duke,True
+2022,East,3,S16,Baylor,Houston,1,5,0.4678,0.5322,Houston,Houston,True
+2022,East,3,S16,Tennessee,Duke,3,2,0.4508,0.5492,Duke,Duke,True
+2022,East,4,E8,Houston,Duke,5,2,0.6631,0.3369,Houston,Duke,False
+2022,West,1,R64,Gonzaga,Bryant,1,16,0.9648,0.0352,Gonzaga,Gonzaga,True
+2022,West,1,R64,San Diego St.,Memphis,8,9,0.6399,0.3601,San Diego St.,Memphis,False
+2022,West,1,R64,Iowa,Wyoming,5,12,0.8888,0.1112,Iowa,,
+2022,West,1,R64,Providence,South Dakota St.,4,13,0.7985,0.2015,Providence,Providence,True
+2022,West,1,R64,LSU,Rutgers,6,11,0.7587,0.2413,LSU,,
+2022,West,1,R64,Texas Tech,Montana St.,3,14,0.9602,0.0398,Texas Tech,Texas Tech,True
+2022,West,1,R64,Ohio St.,Miami FL,7,10,0.4727,0.5273,Miami FL,Ohio St.,False
+2022,West,1,R64,Kentucky,Jacksonville St.,2,15,0.9678,0.0322,Kentucky,,
+2022,West,2,R32,Gonzaga,San Diego St.,1,8,0.8755,0.1245,Gonzaga,Gonzaga,True
+2022,West,2,R32,Iowa,Providence,5,4,0.8266,0.1734,Iowa,Providence,False
+2022,West,2,R32,LSU,Texas Tech,6,3,0.3729,0.6271,Texas Tech,Texas Tech,True
+2022,West,2,R32,Miami FL,Kentucky,10,2,0.1504,0.8496,Kentucky,Miami FL,False
+2022,West,3,S16,Gonzaga,Iowa,1,5,0.7058,0.2942,Gonzaga,,
+2022,West,3,S16,Texas Tech,Kentucky,3,2,0.3843,0.6157,Kentucky,,
+2022,West,4,E8,Gonzaga,Kentucky,1,2,0.5721,0.4279,Gonzaga,,
+2022,Midwest,1,R64,Kansas,Norfolk St.,1,16,0.9604,0.0396,Kansas,Kansas,True
+2022,Midwest,1,R64,Seton Hall,TCU,8,9,0.4732,0.5268,TCU,TCU,True
+2022,Midwest,1,R64,Saint Mary's,New Mexico St.,5,12,0.7837,0.2163,Saint Mary's,Saint Mary's,True
+2022,Midwest,1,R64,UCLA,Vermont,4,13,0.9167,0.0833,UCLA,UCLA,True
+2022,Midwest,1,R64,Texas,Michigan,6,11,0.8153,0.1847,Texas,Texas,True
+2022,Midwest,1,R64,Wisconsin,Yale,3,14,0.7235,0.2765,Wisconsin,Wisconsin,True
+2022,Midwest,1,R64,USC,San Francisco,7,10,0.5179,0.4821,USC,,
+2022,Midwest,1,R64,Villanova,Saint Peter's,2,15,0.9497,0.0503,Villanova,Villanova,True
+2022,Midwest,2,R32,Kansas,TCU,1,9,0.8512,0.1488,Kansas,Kansas,True
+2022,Midwest,2,R32,Saint Mary's,UCLA,5,4,0.2605,0.7395,UCLA,UCLA,True
+2022,Midwest,2,R32,Texas,Wisconsin,6,3,0.8304,0.1696,Texas,,
+2022,Midwest,2,R32,USC,Villanova,7,2,0.1126,0.8874,Villanova,Villanova,True
+2022,Midwest,3,S16,Kansas,UCLA,1,4,0.6311,0.3689,Kansas,Kansas,True
+2022,Midwest,3,S16,Texas,Villanova,6,2,0.3136,0.6864,Villanova,Villanova,True
+2022,Midwest,4,E8,Kansas,Villanova,1,2,0.4933,0.5067,Villanova,Kansas,False
+2022,Final Four,5,F4,Arizona,Houston,1,5,0.3075,0.6925,Houston,,
+2022,Final Four,5,F4,Gonzaga,Villanova,1,2,0.542,0.458,Gonzaga,,
+2022,Championship,6,Champ,Houston,Gonzaga,5,1,0.5787,0.4213,Houston,,

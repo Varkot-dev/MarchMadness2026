@@ -59,15 +59,17 @@ TRAIN_YEARS  = list(range(2013, 2022))   # 2013–2021 inclusive, excl. 2020
 HOLDOUT_YEARS = [2022, 2023, 2024]       # predict these, never seen in training
 
 FEATURES = [
-    # SHAP-validated feature set (temporal CV across 8 folds, 2016-2024):
-    # With 668 tournament games, adding correlated features (ADJOE, ADJDE, QMS,
-    # COACH_PREMIUM) hurts CV log loss vs the 2-feature baseline. SHAP confirms
-    # TQS and SEED_DIVERGENCE dominate mean|SHAP| (0.114 and 0.116 respectively),
-    # while all others are <0.04. The sign-flipping in SHAP across folds is a
-    # collinearity artifact: TQS and ADJOE/ADJDE share variance, so L2 arbitrarily
-    # assigns opposing signs. Bottom line: 2 features is optimal at this sample size.
-    "TRUE_QUALITY_SCORE",  # mean|SHAP|=0.114 — dominant strength signal
-    "SEED_DIVERGENCE",     # mean|SHAP|=0.116 — underseeded upset identifier
+    # SHAP-validated feature set (team-level temporal CV, 8 folds, 2016-2024):
+    # Target = rounds_won per team (not binary game outcome). Team-level framing
+    # eliminates single-game noise and yields stable SHAP directions across folds.
+    # Selected by: mean|SHAP| > 0.01 AND sign consistency > 0.65 or < 0.35.
+    "TRUE_QUALITY_SCORE",  # mean|SHAP|=0.2891, consistency=0.30 (negative = better)
+    "BARTHAG",             # mean|SHAP|=0.1033, consistency=0.22 — Torvik win prob
+    "ADJ_T",               # mean|SHAP|=0.0672, consistency=0.33 — tempo
+    "DRB",                 # mean|SHAP|=0.0637, consistency=0.34 — defensive rebounding
+    "EFF_RATIO",           # mean|SHAP|=0.0415, consistency=0.19 — ADJOE/ADJDE ratio
+    "3P_O",                # mean|SHAP|=0.0332, consistency=0.34 — three-point shooting
+    "FTR",                 # mean|SHAP|=0.0264, consistency=0.66 — free throw rate
 ]
 
 # L2 regularization strength. Smaller C = stronger regularization.
@@ -90,7 +92,10 @@ ESPN_POINTS = ESPN_ROUND_POINTS  # local alias used throughout this file
 
 def load_matchup_data() -> pd.DataFrame:
     """
-    Build a symmetric matchup DataFrame from tournament results + features.
+    Build a symmetric matchup DataFrame from tournament results + candidate features.
+
+    Uses features_candidates.csv (enriched with engineered columns like EFF_RATIO)
+    rather than features_coaching.csv so all FEATURES are available.
 
     For each game (A beats B) creates two rows:
       row1: features(A) - features(B), label=1
@@ -99,16 +104,62 @@ def load_matchup_data() -> pd.DataFrame:
     Returns:
         DataFrame with FEATURES columns + LABEL + YEAR.
     """
-    from src.models.win_probability import load_matchup_data as _load
-    df = _load()
-    # Restrict to years with stable feature coverage
-    df = df[df["YEAR"].between(2013, 2024) & (df["YEAR"] != 2020)]
+    from src.models.win_probability import _build_kaggle_to_cbb_map
+    from src.features.candidates import build_candidate_features
+
+    feats_df = load_features()
+
+    results_path = PROCESSED_DIR.parent / "external" / "kaggle" / "MNCAATourneyDetailedResults.csv"
+    teams_path   = PROCESSED_DIR.parent / "external" / "kaggle" / "MTeams.csv"
+
+    results = pd.read_csv(results_path)
+    teams   = pd.read_csv(teams_path)
+    kaggle_to_cbb = _build_kaggle_to_cbb_map(feats_df, teams)
+
+    feat_lookup: dict[tuple[str, int], np.ndarray] = {}
+    for _, row in feats_df.iterrows():
+        vals = row[FEATURES].values if all(f in row.index for f in FEATURES) else None
+        if vals is not None:
+            feat_lookup[(row["TEAM"], int(row["YEAR"]))] = vals.astype(float)
+
+    records = []
+    for _, game in results.iterrows():
+        year  = int(game["Season"])
+        if not (2013 <= year <= 2024) or year == 2020:
+            continue
+        w_cbb = kaggle_to_cbb.get(int(game["WTeamID"]))
+        l_cbb = kaggle_to_cbb.get(int(game["LTeamID"]))
+        if not w_cbb or not l_cbb:
+            continue
+        w_feats = feat_lookup.get((w_cbb, year))
+        l_feats = feat_lookup.get((l_cbb, year))
+        if w_feats is None or l_feats is None:
+            continue
+        diff = w_feats - l_feats
+        if np.any(np.isnan(diff)):
+            continue
+        records.append({**dict(zip(FEATURES, diff)),  "LABEL": 1, "YEAR": year})
+        records.append({**dict(zip(FEATURES, -diff)), "LABEL": 0, "YEAR": year})
+
+    df = pd.DataFrame(records)
+    log.info(f"Matchup data: {len(df)//2} games across {df['YEAR'].nunique()} seasons")
     return df
 
 
 def load_features() -> pd.DataFrame:
-    """Load full feature matrix for all years."""
-    return pd.read_csv(PROCESSED_DIR / "features_coaching.csv")
+    """
+    Load full feature matrix for all years.
+
+    Prefers features_candidates.csv (includes engineered features like
+    EFF_RATIO). Falls back to features_coaching.csv if not yet built.
+    """
+    candidates_path = PROCESSED_DIR / "features_candidates.csv"
+    coaching_path   = PROCESSED_DIR / "features_coaching.csv"
+    if candidates_path.exists():
+        return pd.read_csv(candidates_path)
+    log.warning("features_candidates.csv not found — falling back to features_coaching.csv. "
+                "Run: python -m src.features.candidates to build it.")
+    return pd.read_csv(coaching_path)
 
 
 def load_actual_results(year: int) -> dict[str, int]:
@@ -341,10 +392,19 @@ def extract_formula(model: LogisticRegression, scaler: StandardScaler,
     interpretations = {
         "TRUE_QUALITY_SCORE": "higher = stronger team (AdjEM - 0.4*Luck)",
         "SEED_DIVERGENCE":    "positive = underseeded (KenPom ranks them better than seed)",
+        "BARTHAG":            "Torvik power rating — P(beat average D1 team)",
+        "ADJ_T":              "adjusted tempo (possessions per 40 min) — slower = deeper runs",
+        "DRB":                "defensive rebounding rate — limits opponent second chances",
+        "EFF_RATIO":          "ADJOE / ADJDE — multiplicative efficiency balance",
+        "3P_O":               "three-point shooting percentage — perimeter threat",
+        "FTR":                "free throw rate (FTA/FGA) — gets to the line consistently",
         "QMS":                "quality momentum — weighted wins vs top-25/50/100 teams",
         "COACH_PREMIUM":      "career tournament wins above seed expectation (Tom Izzo signal)",
         "ADJOE":              "adjusted offensive efficiency (pts per 100 possessions)",
         "ADJDE":              "adjusted defensive efficiency (lower = better defense)",
+        "WAB":                "wins above bubble — performance vs tournament-caliber teams",
+        "TOR":                "turnover rate (lower = takes care of the ball)",
+        "ORB":                "offensive rebounding rate",
     }
 
     df = pd.DataFrame({

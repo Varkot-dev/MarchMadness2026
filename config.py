@@ -35,6 +35,36 @@ ROUND_POINTS = {
     6: 32,  # Champion
 }
 
+# ESPN bracket challenge scoring (actual point values used in competition)
+ESPN_ROUND_POINTS = {
+    1: 10,   # Round of 64
+    2: 20,   # Round of 32
+    3: 40,   # Sweet 16
+    4: 80,   # Elite 8
+    5: 160,  # Final Four
+    6: 320,  # Championship
+}
+
+# Standard NCAA bracket first-round seed pairings (higher seed vs lower seed)
+SEED_PAIRINGS = [(1, 16), (8, 9), (5, 12), (4, 13), (6, 11), (3, 14), (7, 10), (2, 15)]
+
+# Region order determines Final Four pairings: South vs East, West vs Midwest
+REGIONS = ["South", "East", "West", "Midwest"]
+
+# First Four play-in games for 2025 (team_a, team_b, region, seed)
+FIRST_FOUR_2025 = [
+    ("VCU",            "San Diego St.",    "South",   11),
+    ("Saint Francis",  "Alabama St.",      "South",   16),
+    ("North Carolina", "Drake",            "East",    11),
+    ("American",       "Mount St. Mary's", "East",    16),
+    ("Xavier",         "Texas",            "West",    11),
+    ("Norfolk St.",    "SIU Edwardsville", "West",    16),
+]
+
+# Seed Divergence clipping bounds — prevents extreme KenPom rank mismatches
+# from destabilizing LR coefficients (e.g. rank 200 team seeded 1 = -49 raw)
+SEED_DIVERGENCE_CLIP = (-8, 8)
+
 # ── Feature engineering ───────────────────────────────────────────────────────
 LUCK_COEFFICIENT = 0.4          # True Quality Score: AdjEM - (Luck * 0.4)
 QMS_WEIGHTS = {                 # Quality Momentum Score opponent weights

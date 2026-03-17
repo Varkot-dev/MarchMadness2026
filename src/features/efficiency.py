@@ -69,10 +69,15 @@ def compute_seed_divergence(
     actual_seed: pd.Series,
 ) -> pd.Series:
     """
-    Compute Seed Divergence = KenPom implied seed - actual seed.
+    Compute Seed Divergence = actual seed - KenPom implied seed.
 
-    Positive value → team is underseeded (stronger than seed suggests).
-    Negative value → team is overseeded (weaker than seed suggests).
+    Positive value → team is underseeded (KenPom ranks them better than seed).
+                     Example: Auburn KenPom #4 but seeded 4th → divergence = 4 - 1 = +3
+    Negative value → team is overseeded (KenPom ranks them worse than seed).
+                     Example: Kansas KenPom #27 but seeded 4th → divergence = 4 - 7 = -3
+
+    A positive divergence means the committee underrated the team — these are
+    the dangerous upset-causers that the model should favor.
 
     Args:
         kenpom_rank: KenPom national rank for each team.
@@ -82,7 +87,7 @@ def compute_seed_divergence(
         Seed Divergence series (NaN for non-tournament teams).
     """
     implied = kenpom_rank.apply(kenpom_rank_to_implied_seed)
-    return implied - actual_seed
+    return actual_seed - implied
 
 
 def _join_kenpom(cbb: pd.DataFrame, kp: pd.DataFrame) -> pd.DataFrame:

@@ -1,0 +1,3 @@
+feature,raw_weight,norm_weight,interpretation,feature_mean,feature_std
+SEED_DIVERGENCE,0.160145,0.5528,positive = underseeded (KenPom ranks them better than seed),0.0,3.4671
+TRUE_QUALITY_SCORE,0.12954,0.4472,higher = stronger team (AdjEM - 0.4*Luck),0.0,12.8898

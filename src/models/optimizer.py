@@ -38,14 +38,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DIR
-from src.models.simulator import (
-    BRACKET_2025,
+from config import (
+    PROCESSED_DIR,
     ESPN_ROUND_POINTS,
-    FIRST_FOUR_SLOTS,
-    run_simulations,
-    top_champions,
+    REGIONS,
+    FIRST_FOUR_2025,
 )
+from src.models.simulator import run_simulations, top_champions, build_bracket_from_seeds
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
@@ -147,23 +146,69 @@ def load_seed_divergence(year: int = 2025) -> dict[str, float]:
     return dict(zip(yr["TEAM"], yr["SEED_DIVERGENCE"].fillna(0.0)))
 
 
+# ── 2025 Bracket structure (Selection Sunday fallback) ─────────────────────────
+
+# Real 2025 bracket: {region: {seed: team}} — First Four resolved by model
+_BRACKET_2025_SEEDS: dict[str, dict[int, str]] = {
+    "South":   {1:"Auburn",2:"Michigan St.",3:"Iowa St.",4:"Texas A&M",5:"Michigan",
+                6:"Mississippi",7:"Marquette",8:"Louisville",9:"Creighton",10:"New Mexico",
+                11:"San Diego St.",12:"UC San Diego",13:"Yale",14:"Lipscomb",15:"Bryant",16:"Alabama St."},
+    "East":    {1:"Duke",2:"Alabama",3:"Wisconsin",4:"Arizona",5:"Oregon",6:"BYU",
+                7:"Saint Mary's",8:"Mississippi St.",9:"Baylor",10:"Vanderbilt",
+                11:"Drake",12:"Liberty",13:"Akron",14:"Montana",15:"Robert Morris",16:"American"},
+    "West":    {1:"Florida",2:"St. John's",3:"Texas Tech",4:"Maryland",5:"Memphis",
+                6:"Missouri",7:"Kansas",8:"Connecticut",9:"Oklahoma",10:"Arkansas",
+                11:"Texas",12:"McNeese St.",13:"High Point",14:"Troy",15:"Nebraska Omaha",16:"Norfolk St."},
+    "Midwest": {1:"Houston",2:"Tennessee",3:"Kentucky",4:"Purdue",5:"Clemson",6:"Illinois",
+                7:"UCLA",8:"Gonzaga",9:"Georgia",10:"Utah St.",11:"VCU",
+                12:"Colorado St.",13:"Grand Canyon",14:"UNC Wilmington",15:"Wofford",16:"SIU Edwardsville"},
+}
+
+_SEED_PAIRINGS = [(1,16),(8,9),(5,12),(4,13),(6,11),(3,14),(7,10),(2,15)]
+
+
+def _build_bracket_structure_2025() -> dict:
+    """
+    Build the bracket_structure dict for 2025 using the real Selection Sunday seedings.
+
+    Returns the same schema as simulator.build_bracket_from_seeds():
+      {"regions": {region: [(team_a, team_b), ...]}, "first_four": [...]}
+    """
+    regions: dict[str, list[tuple]] = {}
+    for region, seed_map in _BRACKET_2025_SEEDS.items():
+        matchups = [(seed_map[h], seed_map[l]) for h, l in _SEED_PAIRINGS
+                    if h in seed_map and l in seed_map]
+        regions[region] = matchups
+
+    first_four = [
+        (ta, tb, f"FF_{reg}_{seed}") for ta, tb, reg, seed in FIRST_FOUR_2025
+    ]
+    return {"regions": regions, "first_four": first_four}
+
+
 # ── Bracket construction ────────────────────────────────────────────────────────
 
-def _resolve_first_four_chalk(p_reach: pd.DataFrame) -> dict[str, str]:
+def _resolve_first_four_chalk(
+    p_reach: pd.DataFrame,
+    first_four: list[tuple],
+) -> dict[str, str]:
     """
     Resolve First Four matchups by picking the team with higher P(ROUND_1).
 
     Args:
-        p_reach: P(reach) DataFrame.
+        p_reach:    P(reach) DataFrame.
+        first_four: List of (team_a, team_b, region, seed) tuples from config.
 
     Returns:
-        Dict mapping bracket slot string → winning team name.
+        Dict mapping (region, seed) slot key → winning team name.
     """
     resolved = {}
-    for slot, (team_a, team_b) in FIRST_FOUR_SLOTS.items():
+    for team_a, team_b, region, seed in first_four:
+        slot = f"FF_{region}_{seed}"
         p_a = p_reach.loc[team_a, "ROUND_1"] if team_a in p_reach.index else 0.0
         p_b = p_reach.loc[team_b, "ROUND_1"] if team_b in p_reach.index else 0.0
-        resolved[slot] = team_a if p_a >= p_b else team_b
+        resolved[team_a] = team_a if p_a >= p_b else team_b
+        resolved[team_b] = team_a if p_a >= p_b else team_b
     return resolved
 
 
@@ -265,6 +310,7 @@ def build_bracket(
     seed_div: dict[str, float],
     prob_matrix: pd.DataFrame,
     mode: str,
+    bracket_structure: dict | None = None,
 ) -> dict:
     """
     Construct a full bracket using the given strategy mode.
@@ -287,13 +333,22 @@ def build_bracket(
           mode      — bracket type label
     """
     # First Four: always chalk (play-in games carry no strategic value)
-    ff_resolved = _resolve_first_four_chalk(p_reach)
+    ff_resolved = _resolve_first_four_chalk(p_reach, FIRST_FOUR_2025)
 
     picks: dict[str, int] = {}
     region_champs: list[str] = []
 
-    for region in ["South", "East", "West", "Midwest"]:
-        matchups = BRACKET_2025[region]
+    # Use bracket_structure regions if provided, otherwise fall back to REGIONS constant
+    if bracket_structure is not None:
+        region_matchup_map = bracket_structure["regions"]
+    else:
+        raise ValueError(
+            "bracket_structure is required. Build it with simulator.build_bracket_from_seeds() "
+            "or pass a dict with 'regions' key mapping region → list of (team_a, team_b) pairs."
+        )
+
+    for region in REGIONS:
+        matchups = region_matchup_map.get(region, [])
 
         # Resolve First Four slots
         current: list[tuple[str, str]] = []
@@ -439,25 +494,47 @@ def save_brackets(brackets: list[dict], year: int = 2025) -> Path:
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    from config import EXTERNAL_DIR
+    import sys
+
     # 1. Load win probability matrix
     prob_matrix = pd.read_csv(
         PROCESSED_DIR / "win_prob_matrix_2025.csv", index_col=0
     )
 
-    # 2. Run simulations (Layer 2) to get P(reach) distribution
-    log.info("Running 10,000 simulations to build P(reach) table...")
-    sim_results = run_simulations(prob_matrix, n_sims=10_000, seed=42)
+    # 2. Build bracket structure from real 2025 seedings
+    #    Falls back to Kaggle seeds file if available, otherwise uses hardcoded structure
+    seeds_path = EXTERNAL_DIR / "kaggle" / "MNCAATourneySeeds.csv"
+    teams_path = EXTERNAL_DIR / "kaggle" / "MTeams.csv"
 
-    # 3. Build P(reach) table from simulation output
+    if seeds_path.exists() and teams_path.exists():
+        seeds_df = pd.read_csv(seeds_path)
+        teams_df = pd.read_csv(teams_path)
+        yr_seeds = seeds_df[seeds_df["Season"] == 2025]
+        if not yr_seeds.empty:
+            bracket_structure = build_bracket_from_seeds(seeds_df, teams_df, 2025)
+            log.info("Bracket structure built from Kaggle seed data.")
+        else:
+            bracket_structure = _build_bracket_structure_2025()
+            log.info("2025 seeds not in Kaggle file — using hardcoded Selection Sunday bracket.")
+    else:
+        bracket_structure = _build_bracket_structure_2025()
+        log.info("Kaggle files not found — using hardcoded Selection Sunday bracket.")
+
+    # 3. Run simulations (Layer 2) to get P(reach) distribution
+    log.info("Running 10,000 simulations to build P(reach) table...")
+    sim_results = run_simulations(prob_matrix, bracket_structure, n_sims=10_000, seed=42)
+
+    # 4. Build P(reach) table from simulation output
     p_reach = build_p_reach(sim_results)
 
-    # 4. Load seed divergence for upset strategy
+    # 5. Load seed divergence for upset strategy
     seed_div = load_seed_divergence(year=2025)
 
-    # 5. Build three brackets
-    chalk  = build_bracket(p_reach, seed_div, prob_matrix, mode="chalk")
-    medium = build_bracket(p_reach, seed_div, prob_matrix, mode="medium")
-    chaos  = build_bracket(p_reach, seed_div, prob_matrix, mode="chaos")
+    # 6. Build three brackets
+    chalk  = build_bracket(p_reach, seed_div, prob_matrix, mode="chalk",  bracket_structure=bracket_structure)
+    medium = build_bracket(p_reach, seed_div, prob_matrix, mode="medium", bracket_structure=bracket_structure)
+    chaos  = build_bracket(p_reach, seed_div, prob_matrix, mode="chaos",  bracket_structure=bracket_structure)
     brackets = [chalk, medium, chaos]
 
     # 6. Print champion frequency from simulation

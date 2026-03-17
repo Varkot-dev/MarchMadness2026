@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>March Madness Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── design tokens ───────────────────────────────────── */
+:root {
+  --bg:       #080a0d;
+  --s1:       #0d1117;
+  --s2:       #111722;
+  --s3:       #161d2e;
+  --s4:       #1c2538;
+  --s5:       #212c42;
+  --b1:       rgba(255,255,255,0.04);
+  --b2:       rgba(255,255,255,0.08);
+  --b3:       rgba(255,255,255,0.14);
+  --b4:       rgba(255,255,255,0.22);
+  --gold:     #f5c518;
+  --gold2:    #e6b800;
+  --gold3:    #ffd93d;
+  --goldg:    rgba(245,197,24,0.15);
+  --goldf:    rgba(245,197,24,0.06);
+  --ok:       #23d18b;
+  --ok-bg:    rgba(35,209,139,0.10);
+  --ok-bd:    rgba(35,209,139,0.28);
+  --bad:      #ff4757;
+  --bad-bg:   rgba(255,71,87,0.09);
+  --bad-bd:   rgba(255,71,87,0.26);
+  --t1:       #e8ecf3;
+  --t2:       #7d8fa8;
+  --t3:       #3d4f68;
+  --t4:       #27364d;
+  --rr:       5px;
+  --rr2:      8px;
+  /* region accent colors */
+  --c-south:  #3b82f6;
+  --c-east:   #a855f7;
+  --c-west:   #f97316;
+  --c-midwest:#10b981;
+  /* slot sizing */
+  --sw:       172px;
+  --sh:       38px;
+  --cgap:     28px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:var(--bg);
+  color:var(--t1);
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* subtle noise overlay */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9998;opacity:0.4;
+}
+
+/* ── topbar ──────────────────────────────────────────── */
+.topbar{
+  flex-shrink:0;height:58px;
+  background:var(--s1);
+  border-bottom:1px solid var(--b2);
+  display:flex;align-items:center;
+  padding:0 22px;gap:16px;z-index:100;
+  position:relative;
+}
+.topbar::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--goldg),transparent);
+}
+
+.logo-wrap{display:flex;flex-direction:column;line-height:1;}
+.logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:26px;letter-spacing:3px;
+  color:var(--gold);
+  text-shadow:0 0 32px rgba(245,197,24,0.4),0 0 64px rgba(245,197,24,0.15);
+}
+.logo-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:3px;color:var(--t3);
+  text-transform:uppercase;margin-top:1px;
+}
+.vdiv{width:1px;height:28px;background:var(--b2);flex-shrink:0;}
+
+.year-ctrl{display:flex;flex-direction:column;gap:2px;}
+.year-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;}
+select{
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  background:var(--s3);color:var(--t1);
+  border:1px solid var(--b3);border-radius:var(--rr);
+  padding:5px 30px 5px 10px;cursor:pointer;outline:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23f5c518' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  transition:border-color .15s,box-shadow .15s;
+}
+select:hover{border-color:var(--gold2);box-shadow:0 0 0 1px var(--goldg);}
+select:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--goldg);}
+
+.badge{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:1.5px;padding:4px 10px;border-radius:20px;
+  border:1px solid var(--b2);color:var(--t3);background:var(--s3);
+  white-space:nowrap;text-transform:uppercase;
+}
+.badge.holdout{border-color:var(--ok-bd);color:var(--ok);background:var(--ok-bg);}
+.badge.live{border-color:rgba(245,197,24,.4);color:var(--gold);background:var(--goldf);}
+
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.formula-btn{
+  display:flex;align-items:center;gap:6px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;
+  color:var(--gold);background:var(--goldf);
+  border:1px solid rgba(245,197,24,.25);border-radius:var(--rr);
+  padding:6px 14px;cursor:pointer;transition:all .15s;text-transform:uppercase;
+}
+.formula-btn:hover{background:var(--goldg);border-color:rgba(245,197,24,.5);}
+.formula-btn svg{width:13px;height:13px;flex-shrink:0;}
+
+/* ── layout ──────────────────────────────────────────── */
+.body{flex:1;overflow:hidden;display:flex;}
+
+/* ── bracket scroll ──────────────────────────────────── */
+.bscroll{flex:1;overflow:auto;padding:20px 28px 52px;}
+.bscroll::-webkit-scrollbar{width:5px;height:5px;}
+.bscroll::-webkit-scrollbar-track{background:transparent;}
+.bscroll::-webkit-scrollbar-thumb{background:var(--s5);border-radius:3px;}
+
+.loading{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;height:100%;gap:16px;color:var(--t3);
+}
+.spinner{
+  width:32px;height:32px;
+  border:2px solid var(--s4);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* bracket grid */
+.bwrap{
+  display:inline-grid;
+  grid-template-columns:auto auto auto;
+  grid-template-rows:auto auto;
+  gap:0 20px;
+  min-width:max-content;
+}
+
+/* region wrapper */
+.region-wrap{display:flex;flex-direction:column;}
+.region-lbl{
+  display:flex;align-items:center;gap:8px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  font-weight:600;letter-spacing:3px;color:var(--t3);
+  text-transform:uppercase;margin-bottom:10px;
+}
+.region-lbl::before{
+  content:'';width:3px;height:12px;border-radius:2px;
+  background:var(--region-color,var(--t4));flex-shrink:0;
+}
+.region-inner{display:flex;align-items:stretch;}
+.region-inner.mirror{flex-direction:row-reverse;}
+
+/* round column */
+.rcol-wrap{display:flex;flex-direction:column;}
+.rhdr{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:2px;color:var(--t4);text-transform:uppercase;
+  text-align:center;width:var(--sw);margin-bottom:8px;
+}
+.rcol{display:flex;flex-direction:column;}
+
+/* connector gap */
+.cconn{width:var(--cgap);flex-shrink:0;position:relative;}
+
+/* ── game pair ───────────────────────────────────────── */
+.gpair{
+  width:var(--sw);border-radius:var(--rr2);
+  border:1px solid var(--b2);overflow:hidden;
+  cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .12s;
+  position:relative;background:var(--s2);
+}
+.gpair::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.015) 0%,transparent 60%);
+  pointer-events:none;
+}
+.gpair:hover{
+  border-color:rgba(245,197,24,.35);
+  box-shadow:0 0 0 1px rgba(245,197,24,.1),0 4px 20px rgba(0,0,0,.4);
+  transform:translateY(-1px);
+  z-index:5;
+}
+.gpair.sel{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px rgba(245,197,24,.2),0 6px 28px rgba(0,0,0,.5),0 0 20px var(--goldg);
+  transform:translateY(-1px);
+  z-index:6;
+}
+
+/* team slot */
+.tslot{
+  display:flex;align-items:center;height:var(--sh);
+  padding:0 10px;gap:8px;
+  background:var(--s2);
+  border-bottom:1px solid var(--b1);
+  transition:background .12s;
+  position:relative;overflow:hidden;
+}
+.tslot::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:2px;background:transparent;transition:background .12s;
+}
+.tslot:last-child{border-bottom:none;}
+.tslot.ok{background:var(--ok-bg);}
+.tslot.ok::after{background:var(--ok);}
+.tslot.bad{background:var(--bad-bg);}
+.tslot.bad::after{background:var(--bad);}
+
+.seed-n{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  color:var(--t3);background:var(--s4);
+  border-radius:3px;padding:2px 5px;
+  min-width:22px;text-align:center;flex-shrink:0;
+  border:1px solid var(--b1);
+}
+.tname{
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  letter-spacing:-.1px;color:var(--t1);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;
+  min-width:0;
+}
+.tname.dim{color:var(--t3);font-weight:400;}
+.result-icon{
+  font-size:11px;font-weight:700;margin-left:auto;flex-shrink:0;
+  width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+}
+.tslot.ok  .result-icon{color:var(--ok);background:rgba(35,209,139,.15);}
+.tslot.bad .result-icon{color:var(--bad);background:rgba(255,71,87,.13);}
+.pctag{
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--t4);
+  flex-shrink:0;margin-left:auto;
+}
+
+/* ── center panel ────────────────────────────────────── */
+.center{
+  grid-column:2;grid-row:1/span 2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;min-width:220px;padding:0 12px;
+}
+.ff-lbl{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:14px;letter-spacing:4px;color:var(--t3);
+}
+
+.ffslot{
+  width:205px;background:var(--s3);
+  border:1px solid var(--b2);border-radius:var(--rr2);
+  overflow:hidden;cursor:pointer;transition:all .16s;
+}
+.ffslot .tslot{background:var(--s3);}
+.ffslot:hover{border-color:rgba(245,197,24,.35);box-shadow:0 4px 20px rgba(0,0,0,.4);transform:translateY(-1px);}
+.ffslot.sel{border-color:var(--gold);box-shadow:0 0 20px var(--goldg);transform:translateY(-1px);}
+
+.champ-section{display:flex;flex-direction:column;align-items:center;gap:10px;width:205px;}
+.champ-divider{
+  display:flex;align-items:center;gap:8px;width:100%;
+}
+.champ-divider::before,.champ-divider::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--b3));
+}
+.champ-divider::after{background:linear-gradient(90deg,var(--b3),transparent);}
+.champ-divider-txt{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:2px;color:var(--t3);white-space:nowrap;
+}
+
+.champ-card{
+  width:205px;
+  background:linear-gradient(160deg,var(--s3) 0%,var(--s4) 50%,var(--goldf) 100%);
+  border:1px solid rgba(245,197,24,.25);
+  border-radius:12px;padding:20px 16px 16px;
+  text-align:center;
+  box-shadow:
+    0 0 0 1px rgba(245,197,24,.06),
+    0 8px 40px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(245,197,24,.08);
+  cursor:pointer;transition:all .18s;position:relative;overflow:hidden;
+}
+.champ-card::before{
+  content:'';position:absolute;top:-50px;left:50%;transform:translateX(-50%);
+  width:100px;height:100px;
+  background:radial-gradient(circle,rgba(245,197,24,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.champ-card:hover{
+  box-shadow:0 0 0 1px rgba(245,197,24,.15),0 12px 50px rgba(0,0,0,.6),0 0 40px var(--goldg);
+  transform:translateY(-2px);
+}
+.champ-card.sel{
+  box-shadow:0 0 0 1px rgba(245,197,24,.3),0 16px 60px rgba(0,0,0,.7),0 0 60px rgba(245,197,24,.2);
+  transform:translateY(-2px);
+}
+.champ-trophy{font-size:24px;margin-bottom:8px;display:block;filter:drop-shadow(0 0 8px rgba(245,197,24,.4));}
+.champ-eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:3px;color:var(--t3);margin-bottom:8px;text-transform:uppercase;
+}
+.champ-name{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;
+  letter-spacing:2px;color:var(--gold);
+  text-shadow:0 0 24px rgba(245,197,24,.35);line-height:1;
+}
+.champ-actual-row{
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid var(--b2);
+  display:flex;flex-direction:column;gap:6px;
+}
+.champ-actual-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--t3);}
+.champ-actual-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--t2);}
+.correct-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:2px;
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.5px;padding:4px 12px;border-radius:20px;
+}
+.correct-badge.ok {background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd);}
+.correct-badge.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-bd);}
+
+/* ── sidebar ─────────────────────────────────────────── */
+.sidebar{
+  width:0;flex-shrink:0;overflow:hidden;
+  background:var(--s1);
+  border-left:1px solid var(--b2);
+  transition:width .24s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+  position:relative;
+}
+.sidebar::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent,var(--goldg),transparent);
+}
+.sidebar.open{width:390px;}
+.sb-inner{width:390px;height:100%;overflow-y:auto;display:flex;flex-direction:column;}
+.sb-inner::-webkit-scrollbar{width:3px;}
+.sb-inner::-webkit-scrollbar-thumb{background:var(--s5);border-radius:2px;}
+
+.sb-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 13px;border-bottom:1px solid var(--b2);
+  position:sticky;top:0;background:var(--s1);z-index:10;
+  flex-shrink:0;
+}
+.sb-title{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  font-weight:600;letter-spacing:2.5px;color:var(--t2);text-transform:uppercase;
+}
+.sb-close{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--s3);border:1px solid var(--b2);
+  color:var(--t3);font-size:12px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .14s;flex-shrink:0;line-height:1;
+}
+.sb-close:hover{border-color:var(--bad-bd);color:var(--bad);background:var(--bad-bg);}
+
+.sb-body{padding:16px 20px 28px;display:flex;flex-direction:column;gap:14px;}
+
+/* round + region pill */
+.sb-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.meta-pill{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;
+  background:var(--s4);border:1px solid var(--b2);color:var(--t3);
+}
+.meta-pill.gold{border-color:rgba(245,197,24,.25);color:var(--gold);background:var(--goldf);}
+
+/* ── prob bar ──────────────────────────────────────────── */
+.pbar-wrap{
+  background:var(--s3);border:1px solid var(--b2);border-radius:10px;
+  padding:16px;overflow:hidden;position:relative;
+}
+.pbar-wrap::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.02) 0%,transparent 60%);
+  pointer-events:none;
+}
+.pbar-top{display:grid;grid-template-columns:1fr 36px 1fr;align-items:end;margin-bottom:14px;gap:4px;}
+.pbt{}
+.pbt.r{text-align:right;}
+.pbt-conf{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--t3);margin-bottom:4px;text-transform:uppercase;}
+.pbt-seed{
+  display:inline-block;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  background:var(--s4);border:1px solid var(--b2);color:var(--t3);
+  padding:2px 6px;border-radius:3px;margin-bottom:5px;
+}
+.pbt-name{font-family:'Inter',sans-serif;font-size:17px;font-weight:700;color:var(--t1);line-height:1.1;}
+.pbt-pct{
+  font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;
+  margin-top:6px;line-height:1;
+}
+.pbt-pct.fav{color:var(--gold);}
+.pbt-pct.dog{color:var(--t3);}
+.pbar-vs{
+  font-family:'Bebas Neue',sans-serif;font-size:14px;
+  color:var(--t4);text-align:center;align-self:center;letter-spacing:1px;
+}
+.pbar-track{
+  height:10px;background:var(--s5);border-radius:5px;overflow:hidden;
+  position:relative;border:1px solid var(--b1);
+}
+.pbar-fill{
+  position:absolute;left:0;top:0;height:100%;
+  background:linear-gradient(90deg,#c9a30f,var(--gold),var(--gold3));
+  border-radius:5px;
+  transition:width .7s cubic-bezier(.16,1,.3,1);
+  box-shadow:0 0 10px rgba(245,197,24,.25);
+}
+.pbar-remainder{
+  position:absolute;right:0;top:0;height:100%;
+  background:var(--s4);
+}
+
+/* ── prediction result boxes ──────────────────────────── */
+.pred-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pred-box{
+  border-radius:8px;padding:12px;text-align:center;
+  border:1px solid var(--b2);background:var(--s4);
+  display:flex;flex-direction:column;gap:5px;
+}
+.pred-box.ok {background:var(--ok-bg);border-color:var(--ok-bd);}
+.pred-box.bad{background:var(--bad-bg);border-color:var(--bad-bd);}
+.pred-lbl{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:1.5px;color:var(--t3);text-transform:uppercase;
+}
+.pred-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--t1);}
+.pred-val.ok {color:var(--ok);}
+.pred-val.bad{color:var(--bad);}
+.pred-verdict{
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  font-size:10px;font-weight:600;
+  padding:3px 10px;border-radius:20px;align-self:center;
+}
+.pred-verdict.ok {color:var(--ok);background:rgba(35,209,139,.1);border:1px solid var(--ok-bd);}
+.pred-verdict.bad{color:var(--bad);background:rgba(255,71,87,.08);border:1px solid var(--bad-bd);}
+
+/* ── feature comparison ───────────────────────────────── */
+.feat-section{}
+.feat-section-hdr{
+  display:flex;align-items:center;gap:8px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:2px;color:var(--t3);text-transform:uppercase;
+  margin-bottom:8px;
+}
+.feat-section-hdr::after{content:'';flex:1;height:1px;background:var(--b2);}
+
+.feat-tbl{
+  background:var(--s3);border:1px solid var(--b2);border-radius:10px;overflow:hidden;
+}
+.feat-col-hdr{
+  display:grid;grid-template-columns:1fr 120px 1fr;
+  background:var(--s4);border-bottom:1px solid var(--b2);
+  padding:9px 14px;
+}
+.feat-col-hdr-t{
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:700;
+  color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.feat-col-hdr-t.r{text-align:right;}
+.feat-col-hdr-k{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  color:var(--t3);text-align:center;align-self:center;letter-spacing:1px;
+}
+.feat-row{
+  display:grid;grid-template-columns:1fr 120px 1fr;
+  padding:7px 14px;border-bottom:1px solid var(--b1);align-items:center;
+  transition:background .1s;
+}
+.feat-row:last-child{border-bottom:none;}
+.feat-row:hover{background:var(--s4);}
+.fv{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:var(--t2);}
+.fv.r{text-align:right;}
+.fv.better{color:var(--ok);}
+.fv.worse {color:var(--bad);}
+.fk{font-family:'Inter',sans-serif;font-size:10px;color:var(--t3);text-align:center;}
+
+/* ── misc info card ───────────────────────────────────── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.info-card{
+  background:var(--s3);border:1px solid var(--b2);border-radius:8px;
+  padding:10px 12px;display:flex;flex-direction:column;gap:3px;
+}
+.info-card-name{
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:700;
+  color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.info-card-sub{font-family:'Inter',sans-serif;font-size:11px;color:var(--t3);}
+.info-card-sub span{color:var(--t2);}
+
+/* ── formula panel ────────────────────────────────────── */
+.formula-eq-box{
+  background:var(--s3);border:1px solid var(--b2);border-radius:10px;
+  padding:14px 16px;
+}
+.formula-eq-title{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;
+  color:var(--t3);text-transform:uppercase;margin-bottom:10px;
+}
+.formula-eq{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--t2);line-height:1.8;
+}
+.formula-eq .hi{color:var(--gold);font-weight:600;}
+.formula-eq .op{color:var(--t3);}
+
+.weight-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 14px;border-bottom:1px solid var(--b1);
+}
+.weight-item:last-child{border-bottom:none;}
+.weight-bar-bg{
+  flex:1;height:4px;background:var(--s5);border-radius:2px;overflow:hidden;
+}
+.weight-bar-fill{
+  height:100%;border-radius:2px;transition:width .5s ease;
+}
+.weight-bar-fill.pos{background:linear-gradient(90deg,var(--ok),rgba(35,209,139,.5));}
+.weight-bar-fill.neg{background:linear-gradient(90deg,var(--bad),rgba(255,71,87,.5));}
+.weight-name{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:var(--t2);min-width:140px;}
+.weight-val{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  min-width:70px;text-align:right;
+}
+.weight-val.pos{color:var(--ok);}
+.weight-val.neg{color:var(--bad);}
+.weight-interp{font-family:'Inter',sans-serif;font-size:10px;color:var(--t3);flex:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.cv-row{
+  display:grid;grid-template-columns:50px 1fr 60px 60px;
+  align-items:center;padding:7px 14px;border-bottom:1px solid var(--b1);gap:8px;
+}
+.cv-row:last-child{border-bottom:none;}
+.cv-year{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--t2);}
+.cv-bar-bg{height:4px;background:var(--s5);border-radius:2px;overflow:hidden;}
+.cv-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold2),var(--gold));}
+.cv-acc{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-align:right;}
+.cv-ll{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3);text-align:right;}
+
+/* ── statsbar ────────────────────────────────────────── */
+.statsbar{
+  flex-shrink:0;height:38px;
+  background:var(--s1);border-top:1px solid var(--b2);
+  display:flex;align-items:center;padding:0 22px;gap:0;
+  z-index:50;overflow:hidden;
+  position:relative;
+}
+.statsbar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--goldg),transparent);
+}
+.si{display:flex;align-items:center;gap:6px;padding:0 16px;white-space:nowrap;}
+.si:first-child{padding-left:0;}
+.sk{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;}
+.sv{color:var(--t2);font-weight:600;font-size:12px;}
+.sv.gold{color:var(--gold);font-family:'JetBrains Mono',monospace;}
+.sv.ok  {color:var(--ok);}
+.sv.bad {color:var(--bad);}
+.ssep{width:1px;height:16px;background:var(--b2);flex-shrink:0;}
+
+/* accuracy dots */
+.acc-dots{display:flex;align-items:center;gap:3px;}
+.acc-dot{width:6px;height:6px;border-radius:50%;background:var(--s5);}
+.acc-dot.ok{background:var(--ok);}
+.acc-dot.partial{background:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- topbar -->
+<header class="topbar">
+  <div class="logo-wrap">
+    <div class="logo">MARCH MADNESS</div>
+    <div class="logo-sub">ML Bracket Predictor · Formula Model</div>
+  </div>
+
+  <div class="vdiv"></div>
+
+  <div class="year-ctrl">
+    <div class="year-lbl">Tournament</div>
+    <select id="yearSel">
+      {% for y in years %}
+      <option value="{{y}}"{% if y==years[-1]%} selected{%endif%}>{{y}}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <span class="badge" id="yearBadge"></span>
+
+  <div class="topbar-right">
+    <span class="badge" id="trainBadge">Trained 2013–2021</span>
+    <button class="formula-btn" id="formulaBtn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 4c0-1 .7-2 2-2s2 .5 2 2L5 12c0 1-.5 2-2 2"/>
+        <path d="M9 6h4M9 10h4"/>
+      </svg>
+      Formula & Weights
+    </button>
+  </div>
+</header>
+
+<!-- main body -->
+<div class="body">
+  <div class="bscroll" id="bscroll">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--t3)">LOADING BRACKET</div>
+    </div>
+    <div id="broot"></div>
+  </div>
+
+  <!-- sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-inner">
+      <div class="sb-hdr">
+        <div class="sb-title" id="sbTitle">MATCHUP ANALYSIS</div>
+        <button class="sb-close" id="sbClose">✕</button>
+      </div>
+      <div class="sb-body" id="sbBody"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- stats bar -->
+<footer class="statsbar">
+  <div class="si"><span class="sk">Year</span><span class="sv gold" id="stYear">—</span></div>
+  <div class="ssep"></div>
+  <div class="si"><span class="sk">Predicted Champion</span><span class="sv gold" id="stChamp">—</span></div>
+  <div class="ssep" id="stActSep" style="display:none"></div>
+  <div class="si" id="stActItem" style="display:none"><span class="sk">Actual Champion</span><span class="sv" id="stActual">—</span></div>
+  <div class="ssep" id="stScoreSep" style="display:none"></div>
+  <div class="si" id="stScoreItem" style="display:none"><span class="sk">ESPN Score</span><span class="sv gold" id="stScore">—</span></div>
+  <div class="ssep" id="stRaccSep" style="display:none"></div>
+  <div class="si" id="stRaccItem" style="display:none"><span class="sk">Round Accuracy</span><div class="acc-dots" id="stRacc"></div></div>
+  <div class="ssep"></div>
+  <div class="si"><span class="sk">Temporal CV</span><span class="sv" id="stCV">—</span></div>
+  <div class="ssep"></div>
+  <div class="si"><span class="sk">Formula</span><span class="sv" style="color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px">P(A&gt;B) = σ(SCORE_A − SCORE_B)</span></div>
+</footer>
+
+<script>
+'use strict';
+const S={year:null,data:null};
+const RFULL={1:'Round of 64',2:'Round of 32',3:'Sweet 16',4:'Elite Eight',5:'Final Four',6:'Championship'};
+const RSHORT={1:'R64',2:'R32',3:'S16',4:'E8',5:'F4',6:'Champ'};
+const REGIONS=['South','East','West','Midwest'];
+const REGION_COLOR={'South':'#3b82f6','East':'#a855f7','West':'#f97316','Midwest':'#10b981'};
+
+/* ── init ───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded',()=>{
+  const ySel=document.getElementById('yearSel');
+  S.year=parseInt(ySel.value);
+  ySel.addEventListener('change',()=>{S.year=parseInt(ySel.value);load();});
+  document.getElementById('sbClose').addEventListener('click',closeSidebar);
+  document.getElementById('formulaBtn').addEventListener('click',showFormulaSidebar);
+  load();
+});
+
+/* ── load ───────────────────────────────────────────── */
+async function load(){
+  document.getElementById('loading').style.display='flex';
+  document.getElementById('broot').innerHTML='';
+  closeSidebar();
+  try{
+    const r=await fetch(`/api/bracket/${S.year}`);
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    S.data=await r.json();
+    document.getElementById('loading').style.display='none';
+    render();
+  }catch(e){
+    document.getElementById('loading').innerHTML=`<div style="color:var(--bad);font-family:'JetBrains Mono',monospace;font-size:12px">Error: ${e.message}</div>`;
+  }
+}
+
+/* ── render ─────────────────────────────────────────── */
+function render(){
+  const d=S.data;
+  if(!d||!d.matchups) return;
+  const hasActual=d.has_actual, isHoldout=d.is_holdout;
+
+  // year badge
+  const yb=document.getElementById('yearBadge');
+  if(isHoldout){yb.textContent='HOLDOUT — NEVER SEEN IN TRAINING';yb.className='badge holdout';}
+  else if(S.year===2025){yb.textContent='LIVE PREDICTION';yb.className='badge live';}
+  else{yb.textContent='';yb.className='badge';}
+
+  // stats
+  document.getElementById('stYear').textContent=S.year;
+  document.getElementById('stChamp').textContent=d.champion||'—';
+  if(hasActual&&d.actual_champion){
+    show('stActSep');show('stActItem');
+    document.getElementById('stActual').textContent=d.actual_champion;
+    const ok=d.champion===d.actual_champion;
+    document.getElementById('stActual').className='sv '+(ok?'ok':'bad');
+  }else{hide('stActSep');hide('stActItem');}
+  if(hasActual&&d.espn_score!=null){
+    show('stScoreSep');show('stScoreItem');
+    document.getElementById('stScore').textContent=`${d.espn_score} / 1920`;
+  }else{hide('stScoreSep');hide('stScoreItem');}
+  // round accuracy dots
+  if(d.round_accuracy&&Object.keys(d.round_accuracy).length){
+    show('stRaccSep');show('stRaccItem');
+    const dots=document.getElementById('stRacc');
+    dots.innerHTML='';
+    ['R64','R32','S16','E8','F4','Champ'].forEach(k=>{
+      const ra=d.round_accuracy[k];
+      const dot=document.createElement('div');
+      dot.className='acc-dot'+(ra?(ra.pct>=0.75?' ok':ra.pct>=0.5?' partial':''):'');
+      dot.title=ra?`${k}: ${ra.correct}/${ra.total} (${(ra.pct*100).toFixed(0)}%)`:`${k}: no data`;
+      dots.appendChild(dot);
+    });
+  }else{hide('stRaccSep');hide('stRaccItem');}
+  if(d.cv_results&&d.cv_results.length){
+    const avg=(d.cv_results.reduce((s,r)=>s+r.accuracy,0)/d.cv_results.length*100).toFixed(1);
+    document.getElementById('stCV').textContent=`${avg}% (${d.cv_results.length} folds)`;
+  }
+
+  // group matchups
+  const byReg={};
+  const f4=[];
+  let champ=null;
+  for(const m of d.matchups){
+    const reg=m.region, rnd=m.round;
+    if(rnd===6){champ=m;continue;}
+    if(rnd===5){f4.push(m);continue;}
+    if(!byReg[reg]) byReg[reg]={1:[],2:[],3:[],4:[]};
+    (byReg[reg][rnd]=byReg[reg][rnd]||[]).push(m);
+  }
+
+  const root=document.getElementById('broot');
+  const wrap=document.createElement('div');
+  wrap.className='bwrap';
+
+  const pos={South:{col:1,row:1,mirror:false},East:{col:1,row:2,mirror:false},
+             West:{col:3,row:1,mirror:true},Midwest:{col:3,row:2,mirror:true}};
+  REGIONS.forEach(reg=>{
+    const el=buildRegion(reg,byReg[reg]||{},pos[reg].mirror);
+    el.style.gridColumn=pos[reg].col;
+    el.style.gridRow=pos[reg].row;
+    wrap.appendChild(el);
+  });
+
+  const center=buildCenter(f4,champ);
+  center.style.gridColumn=2;
+  center.style.gridRow='1/span 2';
+  wrap.appendChild(center);
+  root.appendChild(wrap);
+}
+
+/* ── build region ───────────────────────────────────── */
+function buildRegion(reg,rounds,mirror){
+  const wrap=document.createElement('div');
+  wrap.className='region-wrap';
+  wrap.style.setProperty('--region-color',REGION_COLOR[reg]||'var(--t4)');
+
+  const lbl=document.createElement('div');
+  lbl.className='region-lbl';
+  lbl.textContent=reg.toUpperCase();
+  wrap.appendChild(lbl);
+
+  const inner=document.createElement('div');
+  inner.className='region-inner'+(mirror?' mirror':'');
+
+  const roundOrder=[1,2,3,4];
+  const labels={1:'R64',2:'R32',3:'S16',4:'E8'};
+
+  roundOrder.forEach((rnd,ci)=>{
+    const matchups=(rounds[rnd]||[]);
+    const nSlots=matchups.length||1;
+    const totalSlots=8;
+    const slotH=38, gapUnit=Math.round((slotH*2*totalSlots)/nSlots);
+    const topPad=rnd===1?0:Math.round(gapUnit/2-slotH);
+    const gap=gapUnit-slotH*2;
+
+    const colWrap=document.createElement('div');
+    colWrap.style.cssText='display:flex;flex-direction:column;';
+
+    const hdr=document.createElement('div');
+    hdr.className='rhdr';
+    hdr.textContent=labels[rnd];
+    colWrap.appendChild(hdr);
+
+    const col=document.createElement('div');
+    col.className='rcol';
+    col.style.gap=`${gap}px`;
+    col.style.paddingTop=`${topPad}px`;
+    matchups.forEach(m=>col.appendChild(buildGamePair(m)));
+    colWrap.appendChild(col);
+    inner.appendChild(colWrap);
+
+    if(ci<roundOrder.length-1){
+      const conn=document.createElement('div');
+      conn.className='cconn';
+      inner.appendChild(conn);
+    }
+  });
+
+  wrap.appendChild(inner);
+  return wrap;
+}
+
+/* ── build game pair ────────────────────────────────── */
+function buildGamePair(m){
+  const pair=document.createElement('div');
+  pair.className='gpair';
+
+  const hasActual=m.actual_winner!==null&&m.actual_winner!==undefined;
+
+  function slotCls(team){
+    if(!hasActual) return '';
+    return m.predicted_winner===team?(m.correct?'ok':'bad'):'';
+  }
+
+  [['a',m.prob_a],['b',m.prob_b]].forEach(([s,prob])=>{
+    const team=m['team_'+s], seed=m['seed_'+s];
+    const isPredWinner=m.predicted_winner===team;
+    const sl=document.createElement('div');
+    sl.className=`tslot ${slotCls(team)}`;
+
+    const seedEl=document.createElement('span');
+    seedEl.className='seed-n';
+    seedEl.textContent=seed??'?';
+
+    const nameEl=document.createElement('span');
+    nameEl.className='tname'+(isPredWinner?'':' dim');
+    nameEl.textContent=team;
+
+    sl.appendChild(seedEl);
+    sl.appendChild(nameEl);
+
+    if(prob!=null){
+      const pctEl=document.createElement('span');
+      pctEl.className='pctag';
+      pctEl.textContent=`${(prob*100).toFixed(0)}%`;
+      sl.appendChild(pctEl);
+    }
+    if(hasActual&&isPredWinner){
+      const ico=document.createElement('span');
+      ico.className='result-icon';
+      ico.textContent=m.correct?'✓':'✗';
+      sl.appendChild(ico);
+    }
+    if(s==='a') sl.style.borderBottom='1px solid var(--b1)';
+    pair.appendChild(sl);
+  });
+
+  pair.addEventListener('click',()=>openMatchupSidebar(m,pair));
+  return pair;
+}
+
+/* ── build center ───────────────────────────────────── */
+function buildCenter(f4,champ){
+  const panel=document.createElement('div');
+  panel.className='center';
+
+  if(f4.length){
+    const lbl=document.createElement('div');
+    lbl.className='ff-lbl';lbl.textContent='FINAL FOUR';
+    panel.appendChild(lbl);
+  }
+
+  f4.forEach(m=>{
+    const slot=document.createElement('div');
+    slot.className='ffslot';
+    const hasActual=m.actual_winner!=null;
+    function slotCls(t){
+      if(!hasActual) return '';
+      return m.predicted_winner===t?(m.correct?'ok':'bad'):'';
+    }
+    ['a','b'].forEach(s=>{
+      const team=m['team_'+s], seed=m['seed_'+s];
+      const isPred=m.predicted_winner===team;
+      const sl=document.createElement('div');
+      sl.className=`tslot ${slotCls(team)}`;
+      sl.innerHTML=`<span class="seed-n">${seed??'?'}</span>
+        <span class="tname${isPred?'':' dim'}">${team}</span>
+        ${hasActual&&isPred?`<span class="result-icon">${m.correct?'✓':'✗'}</span>`:''}`;
+      slot.appendChild(sl);
+    });
+    slot.addEventListener('click',()=>openMatchupSidebar(m,slot));
+    panel.appendChild(slot);
+  });
+
+  if(champ){
+    const sec=document.createElement('div');
+    sec.className='champ-section';
+
+    const div=document.createElement('div');
+    div.className='champ-divider';
+    div.innerHTML=`<span class="champ-divider-txt">Championship</span>`;
+    sec.appendChild(div);
+
+    const card=document.createElement('div');
+    card.className='champ-card';
+    const pred=champ.predicted_winner||champ.team_a;
+    const actual=champ.actual_winner;
+    const hasActual=actual!=null;
+    const correct=hasActual&&pred===actual;
+    const wrong=hasActual&&pred!==actual;
+    if(correct) card.style.background='linear-gradient(160deg,rgba(35,209,139,.08) 0%,var(--s4) 50%,var(--goldf) 100%)';
+    if(wrong)   card.style.background='linear-gradient(160deg,rgba(255,71,87,.07) 0%,var(--s4) 50%,var(--goldf) 100%)';
+
+    card.innerHTML=`
+      <span class="champ-trophy">🏆</span>
+      <div class="champ-eyebrow">Predicted Champion</div>
+      <div class="champ-name">${pred}</div>
+      ${hasActual?`
+        <div class="champ-actual-row">
+          <div class="champ-actual-lbl">Actual Winner</div>
+          <div class="champ-actual-val">${actual}</div>
+          <span class="correct-badge ${correct?'ok':'bad'}">${correct?'✓ Correct':'✗ Wrong'}</span>
+        </div>`:''}
+    `;
+    card.addEventListener('click',()=>openMatchupSidebar(champ,card));
+    sec.appendChild(card);
+    panel.appendChild(sec);
+  }
+
+  return panel;
+}
+
+/* ── sidebar: matchup ───────────────────────────────── */
+function openMatchupSidebar(m,triggerEl){
+  document.querySelectorAll('.gpair.sel,.ffslot.sel,.champ-card.sel').forEach(e=>e.classList.remove('sel'));
+  if(triggerEl) triggerEl.classList.add('sel');
+
+  document.getElementById('sbTitle').textContent='MATCHUP ANALYSIS';
+
+  const ta=m.team_a, tb=m.team_b;
+  const pa=m.prob_a??0.5, pb=m.prob_b??(1-pa);
+  const fa=m.features_a||{}, fb=m.features_b||{};
+  const pred=m.predicted_winner;
+  const actual=m.actual_winner;
+  const hasActual=actual!=null;
+  const correct=hasActual&&pred===actual;
+  const rndLabel=RFULL[m.round]||`Round ${m.round}`;
+  const regLabel=m.region||'';
+  const regColor=REGION_COLOR[m.region]||'var(--t4)';
+  const barW=(pa*100);
+
+  // meta pills
+  const metaHTML=`<div class="sb-meta">
+    <span class="meta-pill" style="border-color:${regColor}33;color:${regColor};background:${regColor}11">${regLabel}</span>
+    <span class="meta-pill gold">${rndLabel}</span>
+    ${hasActual?`<span class="meta-pill ${correct?'ok':'bad'}" style="border-color:${correct?'var(--ok-bd)':'var(--bad-bd)'};color:${correct?'var(--ok)':'var(--bad)'};background:${correct?'var(--ok-bg)':'var(--bad-bg)'}">${correct?'✓ Correct Pick':'✗ Wrong Pick'}</span>`:''}
+  </div>`;
+
+  // prob bar
+  const probHTML=`<div class="pbar-wrap">
+    <div class="pbar-top">
+      <div class="pbt">
+        <div class="pbt-conf">${fa.conf||''}</div>
+        <div class="pbt-seed">${m.seed_a??'?'}</div>
+        <div class="pbt-name">${ta}</div>
+        <div class="pbt-pct ${barW>=50?'fav':'dog'}">${barW.toFixed(1)}%</div>
+      </div>
+      <div class="pbar-vs">VS</div>
+      <div class="pbt r">
+        <div class="pbt-conf">${fb.conf||''}</div>
+        <div class="pbt-seed">${m.seed_b??'?'}</div>
+        <div class="pbt-name">${tb}</div>
+        <div class="pbt-pct ${barW<50?'fav':'dog'}">${(100-barW).toFixed(1)}%</div>
+      </div>
+    </div>
+    <div class="pbar-track">
+      <div class="pbar-fill" style="width:${barW}%"></div>
+    </div>
+  </div>`;
+
+  // pred + actual
+  const predHTML=`<div class="pred-row">
+    <div class="pred-box ${hasActual?(correct?'ok':'bad'):''}">
+      <div class="pred-lbl">Model Picked</div>
+      <div class="pred-val ${hasActual?(correct?'ok':'bad'):''}">${pred||'—'}</div>
+    </div>
+    <div class="pred-box ${hasActual?(correct?'ok':'bad'):''}">
+      <div class="pred-lbl">Actual Winner</div>
+      <div class="pred-val ${hasActual?(correct?'ok':'bad'):''}">${actual||'TBD'}</div>
+    </div>
+  </div>`;
+
+  // feature comparison
+  const feats=[
+    {k:'True Quality Score', f:'true_quality_score', hi:true},
+    {k:'Seed Divergence',    f:'seed_divergence',     hi:true},
+    {k:'Quality Momentum',   f:'qms',                 hi:true},
+    {k:'Coach Premium',      f:'coach_premium',        hi:true},
+    {k:'Adj. Off. Efficiency',f:'adjoe',               hi:true},
+    {k:'Adj. Def. Efficiency',f:'adjde',               hi:false},
+  ];
+  const frows=feats.map(({k,f,hi})=>{
+    const va=fa[f], vb=fb[f];
+    if(va==null&&vb==null) return '';
+    const fmtA=va!=null?(Number.isInteger(va)?va:va.toFixed(2)):'—';
+    const fmtB=vb!=null?(Number.isInteger(vb)?vb:vb.toFixed(2)):'—';
+    let ca='',cb='';
+    if(va!=null&&vb!=null){const ab=hi?va>vb:va<vb;ca=ab?'better':'worse';cb=ab?'worse':'better';}
+    return `<div class="feat-row">
+      <span class="fv ${ca}">${fmtA}</span>
+      <span class="fk">${k}</span>
+      <span class="fv r ${cb}">${fmtB}</span>
+    </div>`;
+  }).join('');
+
+  const featHTML=`<div class="feat-section">
+    <div class="feat-section-hdr">Team Comparison</div>
+    <div class="feat-tbl">
+      <div class="feat-col-hdr">
+        <span class="feat-col-hdr-t">${ta}</span>
+        <span class="feat-col-hdr-k">METRIC</span>
+        <span class="feat-col-hdr-t r">${tb}</span>
+      </div>
+      ${frows||`<div style="padding:14px;color:var(--t3);text-align:center;font-size:12px;">No feature data</div>`}
+    </div>
+  </div>`;
+
+  // team info cards
+  const infoHTML=`<div class="info-grid">
+    ${['a','b'].map(s=>{
+      const t=m['team_'+s], feat=m['features_'+s]||{};
+      const conf=feat.conf||'—';
+      const post=feat.postseason||'—';
+      return `<div class="info-card">
+        <div class="info-card-name">${t}</div>
+        <div class="info-card-sub">Conference: <span>${conf}</span></div>
+        <div class="info-card-sub">Postseason: <span>${post}</span></div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  document.getElementById('sbBody').innerHTML=metaHTML+probHTML+predHTML+featHTML+infoHTML;
+  openSidebar();
+
+  // animate prob bar after insert
+  requestAnimationFrame(()=>{
+    const fill=document.querySelector('.pbar-fill');
+    if(fill){fill.style.width='0%';requestAnimationFrame(()=>{fill.style.width=barW+'%';});}
+  });
+}
+
+/* ── sidebar: formula ───────────────────────────────── */
+function showFormulaSidebar(){
+  document.querySelectorAll('.gpair.sel,.ffslot.sel,.champ-card.sel').forEach(e=>e.classList.remove('sel'));
+  document.getElementById('sbTitle').textContent='MODEL FORMULA';
+
+  const d=S.data;
+  const fw=d?.formula?.weights||{};
+  const cv=d?.cv_results||[];
+
+  const sorted=Object.entries(fw).sort((a,b)=>Math.abs(b[1].norm_weight)-Math.abs(a[1].norm_weight));
+  const maxAbs=sorted.length?Math.abs(sorted[0][1].norm_weight):1;
+
+  const wItems=sorted.map(([feat,info])=>{
+    const pct=(Math.abs(info.norm_weight)/maxAbs*100).toFixed(0);
+    const pos=info.raw_weight>=0;
+    return `<div class="weight-item">
+      <div class="weight-name">${feat.replace(/_/g,' ')}</div>
+      <div class="weight-bar-bg" style="flex:1">
+        <div class="weight-bar-fill ${pos?'pos':'neg'}" style="width:${pct}%"></div>
+      </div>
+      <div class="weight-val ${pos?'pos':'neg'}">${pos?'+':''}${info.raw_weight.toFixed(4)}</div>
+    </div>`;
+  }).join('');
+
+  const cvItems=cv.map(r=>{
+    const acc=(r.accuracy*100);
+    const col=acc>=75?'var(--ok)':acc>=70?'var(--gold)':'var(--bad)';
+    return `<div class="cv-row">
+      <span class="cv-year">${r.year}</span>
+      <div class="cv-bar-bg"><div class="cv-bar-fill" style="width:${acc}%;background:${col}"></div></div>
+      <span class="cv-acc" style="color:${col}">${acc.toFixed(1)}%</span>
+      <span class="cv-ll">${r.log_loss.toFixed(3)} LL</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sbBody').innerHTML=`
+    <div class="formula-eq-box">
+      <div class="formula-eq-title">The Explicit Formula</div>
+      <div class="formula-eq">
+        <span class="hi">P(A beats B)</span> <span class="op">=</span> σ<span class="op">(</span> SCORE(A) <span class="op">−</span> SCORE(B) <span class="op">)</span><br>
+        <span class="hi">SCORE(T)</span> <span class="op">= Σ</span> w_i <span class="op">×</span> feature_i(T)<br><br>
+        <span style="color:var(--t3)">Trained on </span><span class="hi">${d?.train_years?.join(', ')||'2013–2021'}</span><br>
+        <span style="color:var(--t3)">Holdout  </span><span class="hi">${d?.holdout_years?.join(', ')||'2022–2024'}</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="feat-section-hdr">Feature Weights <span style="color:var(--t3);font-size:9px;letter-spacing:1px">(sorted by impact)</span></div>
+      <div style="background:var(--s3);border:1px solid var(--b2);border-radius:10px;overflow:hidden;">
+        ${wItems||`<div style="padding:14px;color:var(--t3);text-align:center;font-size:12px">Run formula_model.py first</div>`}
+      </div>
+    </div>
+
+    ${cv.length?`
+    <div>
+      <div class="feat-section-hdr">Temporal CV Results</div>
+      <div style="background:var(--s3);border:1px solid var(--b2);border-radius:10px;overflow:hidden;">
+        ${cvItems}
+      </div>
+    </div>`:''}
+  `;
+  openSidebar();
+}
+
+/* ── utils ──────────────────────────────────────────── */
+function openSidebar(){document.getElementById('sidebar').classList.add('open');}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.querySelectorAll('.gpair.sel,.ffslot.sel,.champ-card.sel').forEach(e=>e.classList.remove('sel'));
+}
+function show(id){const e=document.getElementById(id);if(e)e.style.display='';}
+function hide(id){const e=document.getElementById(id);if(e)e.style.display='none';}
+</script>
+</body>
+</html>

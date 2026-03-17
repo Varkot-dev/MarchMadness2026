@@ -25,6 +25,7 @@ Output:
 """
 
 import logging
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -33,7 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import PROCESSED_DIR
+from config import EXTERNAL_DIR, PROCESSED_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
@@ -49,75 +50,153 @@ ESPN_ROUND_POINTS = {
     6: 320,  # Championship
 }
 
-# 2025 NCAA Tournament bracket — First Four matchups.
-# Each tuple: (team_a, team_b) — winner advances to main bracket slot.
-FIRST_FOUR_2025 = [
-    # Seed-11 play-ins
-    ("Drake",         "North Carolina"),   # → South region 11-slot
-    ("San Diego St.", "Texas"),            # → East region 11-slot (or West — adjust if needed)
-    # Seed-16 play-ins
-    ("American",      "Mount St. Mary's"), # → South region 16-slot
-    ("Alabama St.",   "Saint Francis"),    # → Midwest region 16-slot
-]
-
-# 2025 Main bracket: 4 regions, each with 16 seeds.
-# Format: list of 8 first-round matchups per region (seed order: 1v16, 8v9, 5v12, 4v13, 6v11, 3v14, 7v10, 2v15)
-# First Four winners are marked as "FF:team_a/team_b" — resolved before simulation.
-BRACKET_2025 = {
-    "South": [
-        ("Auburn",       "Alabama St./Saint Francis"),   # 1 vs 16 (FF winner)
-        ("Louisville",   "Creighton"),                   # 8 vs 9  (note: Creighton is 9, Louisville is 8)
-        ("Michigan",     "UC San Diego"),                # 5 vs 12
-        ("Texas A&M",    "Yale"),                        # 4 vs 13
-        ("Mississippi",  "Drake/North Carolina"),        # 6 vs 11 (FF winner)
-        ("Iowa St.",     "Lipscomb"),                    # 3 vs 14
-        ("Marquette",    "New Mexico"),                  # 7 vs 10
-        ("Michigan St.", "Bryant"),                      # 2 vs 15
-    ],
-    "East": [
-        ("Duke",         "American/Mount St. Mary's"),   # 1 vs 16 (FF winner)
-        ("Mississippi St.", "Baylor"),                   # 8 vs 9
-        ("Oregon",       "Liberty"),                     # 5 vs 12
-        ("Arizona",      "Akron"),                       # 4 vs 13
-        ("Illinois",     "San Diego St./Texas"),         # 6 vs 11 (FF winner)
-        ("Wisconsin",    "Montana"),                     # 3 vs 14
-        ("Saint Mary's", "Vanderbilt"),                  # 7 vs 10
-        ("Alabama",      "Robert Morris"),               # 2 vs 15
-    ],
-    "West": [
-        ("Florida",      "Norfolk St."),                 # 1 vs 16
-        ("Connecticut",  "Oklahoma"),                    # 8 vs 9
-        ("Memphis",      "Colorado St."),                # 5 vs 12
-        ("Maryland",     "Grand Canyon"),                # 4 vs 13
-        ("Missouri",     "Drake/North Carolina"),        # placeholder — see note
-        ("Kentucky",     "Troy"),                        # 3 vs 14
-        ("UCLA",         "Utah St."),                    # 7 vs 10
-        ("Tennessee",    "Wofford"),                     # 2 vs 15
-    ],
-    "Midwest": [
-        ("Houston",      "SIU Edwardsville"),            # 1 vs 16
-        ("Gonzaga",      "Georgia"),                     # 8 vs 9
-        ("Clemson",      "McNeese St."),                 # 5 vs 12
-        ("Purdue",       "High Point"),                  # 4 vs 13
-        ("BYU",          "VCU"),                         # 6 vs 11
-        ("Texas Tech",   "UNC Wilmington"),              # 3 vs 14
-        ("Kansas",       "Arkansas"),                    # 7 vs 10
-        ("St. John's",   "Nebraska Omaha"),              # 2 vs 15
-    ],
+# Kaggle region-letter → standard region name
+KAGGLE_REGION_MAP = {
+    "W": "South",
+    "X": "East",
+    "Y": "West",
+    "Z": "Midwest",
 }
 
-# Resolved First Four slots: maps "placeholder/string" → (team_a, team_b)
-FIRST_FOUR_SLOTS = {
-    "Alabama St./Saint Francis":    ("Alabama St.",   "Saint Francis"),
-    "American/Mount St. Mary's":    ("American",      "Mount St. Mary's"),
-    "Drake/North Carolina":         ("Drake",          "North Carolina"),
-    "San Diego St./Texas":          ("San Diego St.", "Texas"),
-}
+# Standard NCAA bracket first-round seed pairings within a region.
+# Each tuple is (higher_seed, lower_seed) — order matches the bracket pod
+# so that the winner bracket correctly re-seeds pods together.
+SEED_PAIRINGS = [(1, 16), (8, 9), (5, 12), (4, 13), (6, 11), (3, 14), (7, 10), (2, 15)]
+
+
+# ── Bracket construction ───────────────────────────────────────────────────────
+
+def build_bracket_from_seeds(
+    seeds_df: pd.DataFrame,
+    teams_df: pd.DataFrame,
+    year: int,
+) -> dict:
+    """
+    Build a bracket structure dict from Kaggle seed and teams data.
+
+    Parses the Seed column (e.g. "W01", "X11a", "Z16b") to extract region,
+    seed number, and First Four play-in flag.  Teams with the same region
+    + seed number but different 'a'/'b' suffix play each other in the
+    First Four.  The 16 remaining (or play-in winner) slots are then
+    arranged into the 8 standard first-round matchups per region.
+
+    Args:
+        seeds_df:  DataFrame from MNCAATourneySeeds.csv.
+                   Required columns: Season, Seed, TeamID.
+        teams_df:  DataFrame from MTeams.csv.
+                   Required columns: TeamID, TeamName.
+        year:      Tournament season year to build for.
+
+    Returns:
+        Dict with keys:
+          "regions"    : {region_name: [(team_a, team_b), ...]} — 8 matchups
+                         per region in seed-pairing order.
+          "first_four" : [(team_a, team_b, slot_key), ...] — play-in games.
+                         slot_key matches the placeholder used in the regions
+                         dict when one of the two teams is a First Four team.
+    """
+    year_seeds = seeds_df[seeds_df["Season"] == year].copy()
+    if year_seeds.empty:
+        raise ValueError(f"No seed data found for year {year}")
+
+    # Map TeamID → TeamName
+    id_to_name: dict[int, str] = dict(zip(teams_df["TeamID"], teams_df["TeamName"]))
+
+    # Parse each seed entry
+    parsed: list[dict] = []
+    for _, row in year_seeds.iterrows():
+        seed_str = str(row["Seed"])          # e.g. "W01", "X11a", "Z16b"
+        region_letter = seed_str[0]
+        suffix = ""
+        if seed_str[-1] in ("a", "b"):
+            suffix = seed_str[-1]
+            seed_num = int(seed_str[1:3])
+        else:
+            seed_num = int(seed_str[1:3])
+
+        region_name = KAGGLE_REGION_MAP.get(region_letter, region_letter)
+        team_id = int(row["TeamID"])
+        team_name = id_to_name.get(team_id, f"Team_{team_id}")
+
+        parsed.append({
+            "region": region_name,
+            "seed_num": seed_num,
+            "suffix": suffix,
+            "team": team_name,
+            "team_id": team_id,
+        })
+
+    df = pd.DataFrame(parsed)
+
+    # ── Identify First Four pairs ──────────────────────────────────────────────
+    # A First Four pair: two entries with the same (region, seed_num) and
+    # non-empty suffix ('a' and 'b').
+    ff_pairs: list[tuple] = []
+    first_four_teams: set[str] = set()
+
+    grouped = df[df["suffix"] != ""].groupby(["region", "seed_num"])
+    for (region, seed_num), group in grouped:
+        if len(group) == 2:
+            teams_in_pair = group["team"].tolist()
+            # slot_key: a stable string for this play-in slot used as placeholder
+            slot_key = f"FF_{region}_{seed_num}"
+            ff_pairs.append((teams_in_pair[0], teams_in_pair[1], slot_key))
+            first_four_teams.update(teams_in_pair)
+            log.debug(
+                f"First Four: {teams_in_pair[0]} vs {teams_in_pair[1]} "
+                f"({region} seed {seed_num})"
+            )
+
+    # ── Build per-region matchups ──────────────────────────────────────────────
+    # Only keep the 16 main-bracket entries per region.
+    # For First Four seeds, use the slot_key as the team placeholder.
+    # Build a seed_num → team_or_placeholder mapping per region.
+    regions: dict[str, list[tuple]] = {}
+
+    for region_name in df["region"].unique():
+        region_df = df[df["region"] == region_name]
+
+        seed_map: dict[int, str] = {}
+        for _, row in region_df.iterrows():
+            s = row["seed_num"]
+            team = row["team"]
+            suffix = row["suffix"]
+
+            if team in first_four_teams:
+                # Both 'a' and 'b' entries for this seed → use slot_key
+                slot_key = f"FF_{region_name}_{s}"
+                seed_map[s] = slot_key
+            else:
+                # Normal team (no suffix, or only one entry for this seed)
+                seed_map[s] = team
+
+        # Build the 8 standard matchups using SEED_PAIRINGS order
+        matchups: list[tuple] = []
+        for high_seed, low_seed in SEED_PAIRINGS:
+            if high_seed not in seed_map or low_seed not in seed_map:
+                log.warning(
+                    f"Missing seed {high_seed} or {low_seed} in {region_name} "
+                    f"for year {year} — skipping matchup"
+                )
+                continue
+            matchups.append((seed_map[high_seed], seed_map[low_seed]))
+
+        regions[region_name] = matchups
+
+    return {
+        "regions": regions,
+        "first_four": ff_pairs,
+    }
 
 
 # ── Core simulation ────────────────────────────────────────────────────────────
 
-def sim_game(team_a: str, team_b: str, prob_matrix: pd.DataFrame, rng: np.random.Generator) -> str:
+def sim_game(
+    team_a: str,
+    team_b: str,
+    prob_matrix: pd.DataFrame,
+    rng: np.random.Generator,
+) -> str:
     """
     Simulate a single game using win probability matrix.
 
@@ -130,117 +209,159 @@ def sim_game(team_a: str, team_b: str, prob_matrix: pd.DataFrame, rng: np.random
     Returns:
         Name of the winning team.
     """
+    if team_a not in prob_matrix.index or team_b not in prob_matrix.index:
+        # Graceful fallback: flip a fair coin when a team is missing from matrix
+        log.warning(
+            f"Team not in prob_matrix: '{team_a}' vs '{team_b}' — using 50/50"
+        )
+        return team_a if rng.random() < 0.5 else team_b
     p = prob_matrix.loc[team_a, team_b]
     return team_a if rng.random() < p else team_b
 
 
-def resolve_first_four(prob_matrix: pd.DataFrame, rng: np.random.Generator) -> dict[str, str]:
+def resolve_first_four(
+    bracket_structure: dict,
+    prob_matrix: pd.DataFrame,
+    rng: np.random.Generator,
+) -> dict[str, str]:
     """
-    Simulate the four First Four games and return slot → winner mapping.
+    Simulate the First Four games and return slot_key → winner mapping.
 
     Args:
-        prob_matrix: Win probability matrix.
-        rng:         NumPy random generator.
+        bracket_structure: Output of build_bracket_from_seeds().
+        prob_matrix:       Win probability matrix.
+        rng:               NumPy random generator.
 
     Returns:
-        Dict mapping bracket slot string → winning team name.
+        Dict mapping slot_key → winning team name.
     """
-    return {
-        slot: sim_game(teams[0], teams[1], prob_matrix, rng)
-        for slot, teams in FIRST_FOUR_SLOTS.items()
-    }
+    ff_slots: dict[str, str] = {}
+    for team_a, team_b, slot_key in bracket_structure.get("first_four", []):
+        winner = sim_game(team_a, team_b, prob_matrix, rng)
+        ff_slots[slot_key] = winner
+    return ff_slots
 
 
-def sim_region(matchups: list[tuple], prob_matrix: pd.DataFrame, rng: np.random.Generator, ff_winners: dict[str, str]) -> tuple[list[list[str]], str]:
+def sim_region(
+    matchups: list[tuple],
+    prob_matrix: pd.DataFrame,
+    rng: np.random.Generator,
+    ff_winners: dict[str, str],
+) -> tuple[list[list[str]], str]:
     """
     Simulate one region (4 rounds: R64 → R32 → S16 → E8).
 
     Args:
-        matchups:   8 first-round matchups for this region.
+        matchups:    8 first-round matchups for this region.
+                     Entries may be slot_key strings if they are First Four slots.
         prob_matrix: Win probability matrix.
         rng:         NumPy random generator.
-        ff_winners:  First Four slot → winner mapping.
+        ff_winners:  slot_key → winner mapping from resolve_first_four().
 
     Returns:
         Tuple of (round_winners_per_round, regional_champion).
         round_winners_per_round[0] = 8 R64 winners, [1] = 4 R32 winners, etc.
+        The final element is a single-team list containing the E8 champion.
     """
-    # Resolve any First Four slots
-    current = []
+    # Resolve any First Four placeholders
+    current: list[tuple[str, str]] = []
     for team_a, team_b in matchups:
         team_a = ff_winners.get(team_a, team_a)
         team_b = ff_winners.get(team_b, team_b)
         current.append((team_a, team_b))
 
-    all_rounds = []
+    all_rounds: list[list[str]] = []
     teams = current
     while len(teams) > 1:
         winners = [sim_game(a, b, prob_matrix, rng) for a, b in teams]
         all_rounds.append(winners)
         teams = list(zip(winners[::2], winners[1::2]))
 
-    # The regional champion (E8 winner) is the last single team — record it explicitly
+    # E8 champion is the last single remaining team; record explicitly
     champion = all_rounds[-1][0]
     all_rounds.append([champion])
     return all_rounds, champion
 
 
-def sim_final_four(region_champs: list[str], prob_matrix: pd.DataFrame, rng: np.random.Generator) -> tuple[str, str, str]:
+def sim_final_four(
+    region_champs: list[str],
+    region_names: list[str],
+    prob_matrix: pd.DataFrame,
+    rng: np.random.Generator,
+) -> tuple[str, str, str]:
     """
     Simulate Final Four and Championship (rounds 5 and 6).
 
-    Bracket pairing: South vs East, West vs Midwest.
+    Traditional bracket pairing: first region vs second region, third vs fourth.
+    Standard Kaggle ordering (South, East, West, Midwest) pairs South vs East
+    and West vs Midwest.
 
     Args:
-        region_champs: [South, East, West, Midwest] champions.
+        region_champs: Champions in the same order as region_names.
+        region_names:  Ordered list of region names used in simulation.
         prob_matrix:   Win probability matrix.
         rng:           NumPy random generator.
 
     Returns:
         Tuple of (ff_winner_1, ff_winner_2, champion).
     """
-    south, east, west, midwest = region_champs
-    ff1 = sim_game(south, east, prob_matrix, rng)
-    ff2 = sim_game(west, midwest, prob_matrix, rng)
+    if len(region_champs) != 4:
+        raise ValueError(
+            f"Expected 4 region champions, got {len(region_champs)}: {region_champs}"
+        )
+    r1, r2, r3, r4 = region_champs
+    ff1 = sim_game(r1, r2, prob_matrix, rng)
+    ff2 = sim_game(r3, r4, prob_matrix, rng)
     champion = sim_game(ff1, ff2, prob_matrix, rng)
     return ff1, ff2, champion
 
 
-def sim_bracket(prob_matrix: pd.DataFrame, rng: np.random.Generator) -> dict:
+def sim_bracket(
+    prob_matrix: pd.DataFrame,
+    rng: np.random.Generator,
+    bracket_structure: dict,
+) -> dict:
     """
     Simulate one full 68-team tournament bracket.
 
     Args:
-        prob_matrix: Win probability matrix.
-        rng:         NumPy random generator.
+        prob_matrix:       Win probability matrix (teams as index/columns).
+        rng:               NumPy random generator.
+        bracket_structure: Output of build_bracket_from_seeds() — contains
+                           "regions" and "first_four" keys.
 
     Returns:
-        Dict with keys: picks (team → furthest round reached), champion.
-        picks maps team_name → round_number (1–6), 0 = first round loss.
+        Dict with keys:
+          - picks:    team_name → furthest round reached (1–6).
+                      Round 1 = R64 winner; 6 = Champion.
+          - champion: tournament champion team name.
     """
-    ff_winners = resolve_first_four(prob_matrix, rng)
+    ff_winners = resolve_first_four(bracket_structure, prob_matrix, rng)
 
-    region_results = {}
-    region_champs = []
-    regions = ["South", "East", "West", "Midwest"]
+    region_names = list(bracket_structure["regions"].keys())
+    region_results: dict[str, list[list[str]]] = {}
+    region_champs: list[str] = []
 
-    for region in regions:
-        rounds, champ = sim_region(BRACKET_2025[region], prob_matrix, rng, ff_winners)
+    for region in region_names:
+        matchups = bracket_structure["regions"][region]
+        rounds, champ = sim_region(matchups, prob_matrix, rng, ff_winners)
         region_results[region] = rounds
         region_champs.append(champ)
 
-    ff1, ff2, champion = sim_final_four(region_champs, prob_matrix, rng)
+    ff1, ff2, champion = sim_final_four(
+        region_champs, region_names, prob_matrix, rng
+    )
 
-    # Build picks: team → round reached (1=R64 winner, ..., 6=champion)
+    # Build picks: team → furthest round reached (1=R64 winner … 6=champion)
     picks: dict[str, int] = {}
-    for region_idx, region in enumerate(regions):
+    for region in region_names:
         rounds = region_results[region]
         for round_idx, winners in enumerate(rounds):
             round_num = round_idx + 1
             for team in winners:
                 picks[team] = round_num
 
-    # Final Four (round 5) and Champion (round 6)
+    # Final Four (round 5) and Champion (round 6) override any earlier entry
     picks[ff1] = 5
     picks[ff2] = 5
     picks[champion] = 6
@@ -254,12 +375,12 @@ def score_bracket(picks: dict[str, int], truth: dict[str, int]) -> int:
     """
     Score a bracket against actual (or simulated) tournament results.
 
-    A pick is correct if the team advances AT LEAST as far as predicted.
-    Points are awarded per round per the ESPN scoring table.
+    A pick earns points for each round in which the team actually advanced at
+    least as far as predicted.  Points are per the ESPN scoring table.
 
     Args:
-        picks: team → predicted round reached.
-        truth: team → actual round reached (from simulation).
+        picks: team → predicted furthest round reached.
+        truth: team → actual furthest round reached.
 
     Returns:
         Integer ESPN bracket score.
@@ -277,6 +398,7 @@ def score_bracket(picks: dict[str, int], truth: dict[str, int]) -> int:
 
 def run_simulations(
     prob_matrix: pd.DataFrame,
+    bracket_structure: dict,
     n_sims: int = 10_000,
     seed: int = 42,
 ) -> dict:
@@ -284,35 +406,42 @@ def run_simulations(
     Run N Monte Carlo bracket simulations.
 
     Args:
-        prob_matrix: Win probability matrix from Layer 1.
-        n_sims:      Number of simulations.
-        seed:        Random seed for reproducibility.
+        prob_matrix:       Win probability matrix from Layer 1.
+        bracket_structure: Output of build_bracket_from_seeds().
+        n_sims:            Number of simulations (default 10,000).
+        seed:              Random seed for reproducibility.
 
     Returns:
         Dict with keys:
-          - brackets: list of N simulated bracket dicts
-          - scores_per_sim: (N, N) array — scores[i,j] = bracket i scored vs sim j
-          - champions: list of N champion names
-          - p90_bracket: bracket maximizing 90th percentile score
-          - p90_scores: per-bracket p90 scores
+          - brackets:     list of N simulated bracket dicts.
+          - scores:       (N, scoring_sample) array — scores[i,j] = bracket i
+                          scored against sampled outcome j.
+          - champions:    list of N champion names.
+          - p90_bracket:  bracket maximizing 90th-percentile score.
+          - p90_scores:   per-bracket p90 scores array.
+          - best_idx:     index of the p90-maximizing bracket.
     """
     rng = np.random.default_rng(seed)
     log.info(f"Running {n_sims:,} simulations...")
 
-    brackets = [sim_bracket(prob_matrix, rng) for _ in range(n_sims)]
+    brackets = [
+        sim_bracket(prob_matrix, rng, bracket_structure) for _ in range(n_sims)
+    ]
     log.info("Simulations complete. Scoring brackets...")
 
     picks_list = [b["picks"] for b in brackets]
     champions = [b["champion"] for b in brackets]
 
     # Score each bracket against a random sample of 1,000 simulated outcomes.
-    # Full N×N (100M ops, ~400MB) is unnecessary — 1k sample gives a p90
-    # estimate within ~2 percentile points, sufficient to rank brackets.
+    # Full N×N (100M ops) is unnecessary — 1k sample gives a p90 estimate
+    # within ~2 percentile points, sufficient to rank brackets.
     scoring_sample = 1_000
     sample_idxs = rng.choice(n_sims, size=scoring_sample, replace=False)
     sample_truths = [brackets[int(j)]["picks"] for j in sample_idxs]
 
-    log.info(f"Scoring {n_sims:,} brackets against {scoring_sample} sampled outcomes...")
+    log.info(
+        f"Scoring {n_sims:,} brackets against {scoring_sample} sampled outcomes..."
+    )
     scores = np.zeros((n_sims, scoring_sample), dtype=np.int32)
     for j, truth in enumerate(sample_truths):
         for i in range(n_sims):
@@ -322,7 +451,9 @@ def run_simulations(
     p90_scores = np.percentile(scores, 90, axis=1)
     best_idx = int(np.argmax(p90_scores))
 
-    log.info(f"Best bracket index: {best_idx} (p90 score: {p90_scores[best_idx]:.0f})")
+    log.info(
+        f"Best bracket index: {best_idx} (p90 score: {p90_scores[best_idx]:.0f})"
+    )
 
     return {
         "brackets": brackets,
@@ -354,16 +485,19 @@ def top_champions(champions: list[str], n: int = 5) -> pd.DataFrame:
     return top[["TEAM", "FREQUENCY_PCT"]]
 
 
-def plot_score_distribution(scores: np.ndarray, best_idx: int, out_path: Path) -> None:
+def plot_score_distribution(
+    scores: np.ndarray,
+    best_idx: int,
+    out_path: Path,
+) -> None:
     """
-    Plot distribution of p90 scores across all simulated brackets.
+    Plot distribution of mean and p90 scores across all simulated brackets.
 
     Args:
-        scores:    (N, N) score matrix.
+        scores:    (N, scoring_sample) score matrix.
         best_idx:  Index of the best bracket.
         out_path:  Path to save the PNG.
     """
-    # Mean score per bracket across the scoring sample
     mean_scores = scores.mean(axis=1)
     best_score = mean_scores[best_idx]
     p90_scores = np.percentile(scores, 90, axis=1)
@@ -373,19 +507,29 @@ def plot_score_distribution(scores: np.ndarray, best_idx: int, out_path: Path) -
 
     # Left: mean score distribution
     axes[0].hist(mean_scores, bins=60, color="steelblue", alpha=0.8, edgecolor="white")
-    axes[0].axvline(best_score, color="crimson", lw=2, linestyle="--", label=f"Best bracket: {best_score:.0f}")
+    axes[0].axvline(
+        best_score, color="crimson", lw=2, linestyle="--",
+        label=f"Best bracket: {best_score:.0f}",
+    )
     axes[0].set_xlabel("Mean Score Across All Simulations", fontsize=11)
     axes[0].set_ylabel("Number of Brackets", fontsize=11)
-    axes[0].set_title("Distribution of Mean Bracket Scores\n(10,000 simulations)", fontsize=12)
+    axes[0].set_title(
+        "Distribution of Mean Bracket Scores\n(10,000 simulations)", fontsize=12
+    )
     axes[0].legend(fontsize=10)
     axes[0].grid(True, alpha=0.3)
 
     # Right: p90 score distribution
     axes[1].hist(p90_scores, bins=60, color="seagreen", alpha=0.8, edgecolor="white")
-    axes[1].axvline(best_p90, color="crimson", lw=2, linestyle="--", label=f"Best bracket p90: {best_p90:.0f}")
+    axes[1].axvline(
+        best_p90, color="crimson", lw=2, linestyle="--",
+        label=f"Best bracket p90: {best_p90:.0f}",
+    )
     axes[1].set_xlabel("90th Percentile Score", fontsize=11)
     axes[1].set_ylabel("Number of Brackets", fontsize=11)
-    axes[1].set_title("Distribution of P90 Bracket Scores\n(optimization target)", fontsize=12)
+    axes[1].set_title(
+        "Distribution of P90 Bracket Scores\n(optimization target)", fontsize=12
+    )
     axes[1].legend(fontsize=10)
     axes[1].grid(True, alpha=0.3)
 
@@ -396,18 +540,24 @@ def plot_score_distribution(scores: np.ndarray, best_idx: int, out_path: Path) -
 
 def print_bracket(bracket: dict) -> None:
     """
-    Pretty-print a bracket's picks grouped by the furthest round each team reached.
+    Pretty-print a bracket's picks grouped by furthest round reached.
 
     picks[team] = furthest round reached (1=R64 winner ... 6=Champion).
-    Each round label shows the teams that advanced TO that round (i.e. won round N-1
-    and are being picked to win round N or further).
+    Each round label shows the teams that advanced TO that round.
+
+    Args:
+        bracket: Dict with "picks" key mapping team_name → round_number.
     """
     picks = bracket["picks"]
-    round_names = {1: "Round of 64", 2: "Round of 32", 3: "Sweet 16",
-                   4: "Elite 8", 5: "Final Four", 6: "Champion"}
+    round_names = {
+        1: "Round of 64",
+        2: "Round of 32",
+        3: "Sweet 16",
+        4: "Elite 8",
+        5: "Final Four",
+        6: "Champion",
+    }
 
-    # Group teams by furthest round — each team appears exactly once
-    # at their maximum predicted round
     by_round: dict[int, list[str]] = {r: [] for r in range(1, 7)}
     for team, rnd in picks.items():
         by_round[rnd].append(team)
@@ -427,9 +577,40 @@ def print_bracket(bracket: dict) -> None:
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    prob_matrix = pd.read_csv(PROCESSED_DIR / "win_prob_matrix_2025.csv", index_col=0)
+    if len(sys.argv) < 2:
+        print("Usage: python simulator.py <year>")
+        print("Example: python simulator.py 2024")
+        sys.exit(1)
 
-    results = run_simulations(prob_matrix, n_sims=10_000)
+    year = int(sys.argv[1])
+    kaggle_dir = EXTERNAL_DIR / "kaggle"
+    seeds_path = kaggle_dir / "MNCAATourneySeeds.csv"
+    teams_path = kaggle_dir / "MTeams.csv"
+    matrix_path = PROCESSED_DIR / f"win_prob_matrix_{year}.csv"
+
+    if not seeds_path.exists():
+        raise FileNotFoundError(
+            f"Seeds file not found: {seeds_path}\n"
+            "Download from: https://www.kaggle.com/competitions/march-machine-learning-mania-2025"
+        )
+    if not matrix_path.exists():
+        raise FileNotFoundError(
+            f"Win probability matrix not found: {matrix_path}\n"
+            "Run win_probability.py first to generate it."
+        )
+
+    seeds_df = pd.read_csv(seeds_path)
+    teams_df = pd.read_csv(teams_path)
+    prob_matrix = pd.read_csv(matrix_path, index_col=0)
+
+    log.info(f"Building bracket structure for {year}...")
+    bracket_structure = build_bracket_from_seeds(seeds_df, teams_df, year)
+    log.info(
+        f"Bracket built: {len(bracket_structure['regions'])} regions, "
+        f"{len(bracket_structure['first_four'])} First Four games"
+    )
+
+    results = run_simulations(prob_matrix, bracket_structure, n_sims=10_000)
 
     # Champion frequency
     print("\nTop 5 Most Common Champion Picks:")
@@ -443,12 +624,12 @@ if __name__ == "__main__":
     plot_score_distribution(
         results["scores"],
         results["best_idx"],
-        PROCESSED_DIR / "score_distribution.png",
+        PROCESSED_DIR / f"score_distribution_{year}.png",
     )
 
     # Summary stats
     mean_scores = results["scores"].mean(axis=1)
-    p90_scores  = results["p90_scores"]
+    p90_scores = results["p90_scores"]
     print(f"\nScore Distribution Summary (across 1,000-sample scoring):")
     print(f"  Mean of mean scores:  {mean_scores.mean():.1f}")
     print(f"  Median mean score:    {np.median(mean_scores):.1f}")

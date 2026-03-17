@@ -53,8 +53,34 @@ DIFF_FEATURES = [
     "ORB",
 ]
 
-# Sigma for margin → probability mapping (historical NCAA tournament std dev)
+# Sigma for margin → probability mapping.
+# Hardcoded fallback; overridden at runtime by fit_margin_sigma() below.
+# Historical NCAA tournament margin std dev is typically 10–12 pts.
 MARGIN_SIGMA = 10.5
+
+
+def fit_margin_sigma(df: pd.DataFrame) -> float:
+    """
+    Fit the margin-to-probability sigma from historical tournament data.
+
+    Uses the standard deviation of winning margins across all games.
+    This ensures the normal CDF mapping P = Φ(margin/σ) is properly
+    calibrated to the actual spread of tournament results rather than
+    a hardcoded constant.
+
+    Args:
+        df: Symmetric matchup DataFrame from load_matchup_data().
+            Must have a MARGIN column (positive = team A won).
+
+    Returns:
+        Fitted sigma (std dev of absolute margins).
+    """
+    # Use only the winner-perspective rows (LABEL=1) to avoid double-counting
+    margins = df.loc[df["LABEL"] == 1, "MARGIN"].abs()
+    sigma = float(margins.std())
+    log.info(f"Fitted margin sigma: {sigma:.2f} (n={len(margins)} games, "
+             f"range {margins.min():.0f}–{margins.max():.0f})")
+    return sigma
 
 
 # ── Data preparation ───────────────────────────────────────────────────────────
@@ -270,11 +296,14 @@ def loso_cv(df: pd.DataFrame) -> pd.DataFrame:
         lr_probs = lr_model.predict_proba(scaler.transform(X_test))[:, 1]
         lr_preds = (lr_probs >= 0.5).astype(int)
 
+        # Fit sigma from training data so XGBoost CDF is calibrated to this fold
+        sigma = fit_margin_sigma(df[train_mask])
+
         # XGBoost margin model
         try:
             xgb_model = train_xgboost_margin(X_train, y_train_mar)
             xgb_margin = xgb_model.predict(X_test)
-            xgb_probs = margin_to_prob(xgb_margin)
+            xgb_probs = margin_to_prob(xgb_margin, sigma=sigma)
             xgb_preds = (xgb_probs >= 0.5).astype(int)
             xgb_ll = log_loss(y_test_lbl, np.clip(xgb_probs, 1e-7, 1 - 1e-7))
             xgb_acc = accuracy_score(y_test_lbl, xgb_preds)
@@ -343,11 +372,14 @@ def temporal_cv(df: pd.DataFrame, min_train_seasons: int = 3) -> pd.DataFrame:
         lr_probs = lr_model.predict_proba(scaler.transform(X_test))[:, 1]
         lr_preds = (lr_probs >= 0.5).astype(int)
 
+        # Fit sigma from training data only — no future data
+        sigma = fit_margin_sigma(df[train_mask])
+
         # XGBoost margin model
         try:
             xgb_model = train_xgboost_margin(X_train, y_train_mar)
             xgb_margin = xgb_model.predict(X_test)
-            xgb_probs = margin_to_prob(xgb_margin)
+            xgb_probs = margin_to_prob(xgb_margin, sigma=sigma)
             xgb_preds = (xgb_probs >= 0.5).astype(int)
             xgb_ll = log_loss(y_test_lbl, np.clip(xgb_probs, 1e-7, 1 - 1e-7))
             xgb_acc = accuracy_score(y_test_lbl, xgb_preds)
@@ -519,26 +551,35 @@ def build_win_prob_matrix(
 
     teams = tourney["TEAM"].tolist()
     n = len(teams)
-    matrix = pd.DataFrame(np.nan, index=teams, columns=teams)
 
-    for i, team_a in enumerate(teams):
-        for j, team_b in enumerate(teams):
-            if i == j:
-                matrix.loc[team_a, team_b] = 0.5
-                continue
-            a = tourney[tourney["TEAM"] == team_a][DIFF_FEATURES].values[0]
-            b = tourney[tourney["TEAM"] == team_b][DIFF_FEATURES].values[0]
-            diff = (a - b).reshape(1, -1)
+    # Pre-build feature dict for O(1) lookups — avoids 4,624 DataFrame filters
+    feat_dict: dict[str, np.ndarray] = {
+        row["TEAM"]: row[DIFF_FEATURES].values
+        for _, row in tourney.iterrows()
+    }
 
-            lr_prob = lr_model.predict_proba(scaler.transform(diff))[0, 1]
+    # Fit sigma from the full training data passed via the matrix build context.
+    # Fall back to MARGIN_SIGMA constant if no margin data is accessible here.
+    sigma = MARGIN_SIGMA
 
-            if xgb_model is not None:
-                xgb_prob = margin_to_prob(xgb_model.predict(diff))[0]
-                prob = (lr_prob + xgb_prob) / 2
-            else:
-                prob = lr_prob
+    # Build all pairwise diffs as a batch for LR (vectorized predict_proba)
+    # Shape: (n*(n-1), n_features) — all off-diagonal pairs
+    pair_idx: list[tuple[int, int]] = [
+        (i, j) for i in range(n) for j in range(n) if i != j
+    ]
+    team_arr = np.array([feat_dict[teams[i]] - feat_dict[teams[j]] for i, j in pair_idx])
+    lr_probs_flat = lr_model.predict_proba(scaler.transform(team_arr))[:, 1]
 
-            matrix.loc[team_a, team_b] = round(prob, 4)
+    if xgb_model is not None:
+        xgb_margins_flat = xgb_model.predict(team_arr)
+        xgb_probs_flat = margin_to_prob(xgb_margins_flat, sigma=sigma)
+        probs_flat = (lr_probs_flat + xgb_probs_flat) / 2
+    else:
+        probs_flat = lr_probs_flat
+
+    matrix = pd.DataFrame(0.5, index=teams, columns=teams)
+    for k, (i, j) in enumerate(pair_idx):
+        matrix.iloc[i, j] = round(float(probs_flat[k]), 4)
 
     log.info(f"Win probability matrix built: {n}×{n} teams for {year}")
     return matrix

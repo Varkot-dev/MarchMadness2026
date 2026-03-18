@@ -1,64 +1,64 @@
 year,region,round,round_name,team_a,team_b,seed_a,seed_b,prob_a,prob_b,predicted_winner,actual_winner,correct
-2024,South,1,R64,Connecticut,Longwood,1,16,0.9907,0.0093,Connecticut,Connecticut,True
-2024,South,1,R64,Florida Atlantic,Michigan St.,8,9,0.1118,0.8882,Michigan St.,Michigan St.,True
-2024,South,1,R64,Gonzaga,Grand Canyon,5,12,0.8268,0.1732,Gonzaga,Gonzaga,True
-2024,South,1,R64,Alabama,College of Charleston,4,13,0.9172,0.0828,Alabama,Alabama,True
-2024,South,1,R64,BYU,Duquesne,6,11,0.9139,0.0861,BYU,Duquesne,False
-2024,South,1,R64,Baylor,Akron,3,14,0.9172,0.0828,Baylor,Baylor,True
-2024,South,1,R64,Dayton,Colorado,7,10,0.2642,0.7358,Colorado,Dayton,False
-2024,South,1,R64,Arizona,Long Beach St.,2,15,0.9743,0.0257,Arizona,Arizona,True
-2024,South,2,R32,Connecticut,Michigan St.,1,9,0.7765,0.2235,Connecticut,Connecticut,True
-2024,South,2,R32,Gonzaga,Alabama,5,4,0.5866,0.4134,Gonzaga,Gonzaga,True
-2024,South,2,R32,BYU,Baylor,6,3,0.5177,0.4823,BYU,,
-2024,South,2,R32,Colorado,Arizona,10,2,0.4166,0.5834,Arizona,Arizona,True
-2024,South,3,S16,Connecticut,Gonzaga,1,5,0.801,0.199,Connecticut,Connecticut,True
-2024,South,3,S16,BYU,Arizona,6,2,0.3333,0.6667,Arizona,,
-2024,South,4,E8,Connecticut,Arizona,1,2,0.7817,0.2183,Connecticut,Connecticut,True
-2024,East,1,R64,Houston,Stetson,1,16,0.9903,0.0097,Houston,Houston,True
-2024,East,1,R64,Mississippi St.,Northwestern,8,9,0.522,0.478,Mississippi St.,Northwestern,False
-2024,East,1,R64,Saint Mary's,James Madison,5,12,0.8254,0.1746,Saint Mary's,James Madison,False
-2024,East,1,R64,Auburn,Samford,4,13,0.9643,0.0357,Auburn,,
-2024,East,1,R64,Clemson,New Mexico,6,11,0.4731,0.5269,New Mexico,Clemson,False
-2024,East,1,R64,Creighton,Colgate,3,14,0.9633,0.0367,Creighton,Creighton,True
-2024,East,1,R64,Florida,Colorado St.,7,10,0.4978,0.5022,Colorado St.,,
-2024,East,1,R64,Iowa St.,Saint Peter's,2,15,0.9817,0.0183,Iowa St.,Iowa St.,True
-2024,East,2,R32,Houston,Mississippi St.,1,8,0.879,0.121,Houston,Houston,True
-2024,East,2,R32,Saint Mary's,Auburn,5,4,0.1688,0.8312,Auburn,,
-2024,East,2,R32,New Mexico,Creighton,11,3,0.413,0.587,Creighton,Creighton,True
-2024,East,2,R32,Colorado St.,Iowa St.,10,2,0.2568,0.7432,Iowa St.,Iowa St.,True
-2024,East,3,S16,Houston,Auburn,1,4,0.4813,0.5187,Auburn,,
-2024,East,3,S16,Creighton,Iowa St.,3,2,0.4279,0.5721,Iowa St.,,
-2024,East,4,E8,Auburn,Iowa St.,4,2,0.6641,0.3359,Auburn,,
-2024,West,1,R64,North Carolina,Montana St.,1,16,0.9753,0.0247,North Carolina,North Carolina,True
-2024,West,1,R64,Nebraska,TCU,8,9,0.6255,0.3745,Nebraska,,
-2024,West,1,R64,San Diego St.,McNeese St.,5,12,0.8117,0.1883,San Diego St.,San Diego St.,True
-2024,West,1,R64,Duke,Vermont,4,13,0.9671,0.0329,Duke,Duke,True
-2024,West,1,R64,South Carolina,North Carolina St.,6,11,0.2105,0.7895,North Carolina St.,North Carolina St.,True
-2024,West,1,R64,Illinois,Morehead St.,3,14,0.9444,0.0556,Illinois,Illinois,True
-2024,West,1,R64,Texas,Nevada,7,10,0.5769,0.4231,Texas,Texas,True
-2024,West,1,R64,Marquette,South Dakota St.,2,15,0.9221,0.0779,Marquette,Marquette,True
-2024,West,2,R32,North Carolina,Nebraska,1,8,0.6903,0.3097,North Carolina,North Carolina,True
-2024,West,2,R32,San Diego St.,Duke,5,4,0.197,0.803,Duke,San Diego St.,False
-2024,West,2,R32,North Carolina St.,Illinois,11,3,0.2177,0.7823,Illinois,North Carolina St.,False
-2024,West,2,R32,Texas,Marquette,7,2,0.4437,0.5563,Marquette,Marquette,True
-2024,West,3,S16,North Carolina,Duke,1,4,0.3367,0.6633,Duke,Duke,True
-2024,West,3,S16,Illinois,Marquette,3,2,0.6267,0.3733,Illinois,Illinois,True
-2024,West,4,E8,Duke,Illinois,4,3,0.6398,0.3602,Duke,,
-2024,Midwest,1,R64,Purdue,Grambling St.,1,16,0.9925,0.0075,Purdue,Purdue,True
-2024,Midwest,1,R64,Utah St.,Texas A&M,8,9,0.2526,0.7474,Texas A&M,Utah St.,False
-2024,Midwest,1,R64,Wisconsin,UAB,5,12,0.9173,0.0827,Wisconsin,,
-2024,Midwest,1,R64,Kansas,Yale,4,13,0.7592,0.2408,Kansas,Kansas,True
-2024,Midwest,1,R64,Texas Tech,Oregon,6,11,0.6379,0.3621,Texas Tech,Oregon,False
-2024,Midwest,1,R64,Kentucky,Oakland,3,14,0.8655,0.1345,Kentucky,Oakland,False
-2024,Midwest,1,R64,Washington St.,Boise St.,7,10,0.3929,0.6071,Boise St.,Washington St.,False
-2024,Midwest,1,R64,Tennessee,Western Kentucky,2,15,0.962,0.038,Tennessee,Tennessee,True
-2024,Midwest,2,R32,Purdue,Texas A&M,1,9,0.8529,0.1471,Purdue,Purdue,True
-2024,Midwest,2,R32,Wisconsin,Kansas,5,4,0.6813,0.3187,Wisconsin,,
-2024,Midwest,2,R32,Texas Tech,Kentucky,6,3,0.4753,0.5247,Kentucky,,
-2024,Midwest,2,R32,Boise St.,Tennessee,10,2,0.1766,0.8234,Tennessee,Tennessee,True
-2024,Midwest,3,S16,Purdue,Wisconsin,1,5,0.7963,0.2037,Purdue,Purdue,True
-2024,Midwest,3,S16,Kentucky,Tennessee,3,2,0.1934,0.8066,Tennessee,Tennessee,True
-2024,Midwest,4,E8,Purdue,Tennessee,1,2,0.6261,0.3739,Purdue,Purdue,True
-2024,Final Four,5,F4,Connecticut,Auburn,1,4,0.6472,0.3528,Connecticut,Connecticut,True
-2024,Final Four,5,F4,Duke,Purdue,4,1,0.4473,0.5527,Purdue,Purdue,True
-2024,Championship,6,Champ,Connecticut,Purdue,1,1,0.6799,0.3201,Connecticut,Connecticut,True
+2024,South,1,R64,Connecticut,Longwood,1,16,0.9922,0.0078,Connecticut,Connecticut,True
+2024,South,1,R64,Florida Atlantic,Michigan St.,8,9,0.1033,0.8967,Michigan St.,Michigan St.,True
+2024,South,1,R64,Gonzaga,Grand Canyon,5,12,0.8354,0.1646,Gonzaga,Gonzaga,True
+2024,South,1,R64,Alabama,College of Charleston,4,13,0.924,0.076,Alabama,Alabama,True
+2024,South,1,R64,BYU,Duquesne,6,11,0.9211,0.0789,BYU,Duquesne,False
+2024,South,1,R64,Baylor,Akron,3,14,0.9237,0.0763,Baylor,Baylor,True
+2024,South,1,R64,Dayton,Colorado,7,10,0.2556,0.7444,Colorado,Dayton,False
+2024,South,1,R64,Arizona,Long Beach St.,2,15,0.9775,0.0225,Arizona,Arizona,True
+2024,South,2,R32,Connecticut,Michigan St.,1,9,0.7831,0.2169,Connecticut,Connecticut,True
+2024,South,2,R32,Gonzaga,Alabama,5,4,0.5904,0.4096,Gonzaga,Gonzaga,True
+2024,South,2,R32,BYU,Baylor,6,3,0.519,0.481,BYU,,
+2024,South,2,R32,Colorado,Arizona,10,2,0.415,0.585,Arizona,Arizona,True
+2024,South,3,S16,Connecticut,Gonzaga,1,5,0.8086,0.1914,Connecticut,Connecticut,True
+2024,South,3,S16,BYU,Arizona,6,2,0.328,0.672,Arizona,,
+2024,South,4,E8,Connecticut,Arizona,1,2,0.7895,0.2105,Connecticut,Connecticut,True
+2024,East,1,R64,Houston,Stetson,1,16,0.9918,0.0082,Houston,Houston,True
+2024,East,1,R64,Mississippi St.,Northwestern,8,9,0.5228,0.4772,Mississippi St.,Northwestern,False
+2024,East,1,R64,Saint Mary's,James Madison,5,12,0.8341,0.1659,Saint Mary's,James Madison,False
+2024,East,1,R64,Auburn,Samford,4,13,0.9685,0.0315,Auburn,,
+2024,East,1,R64,Clemson,New Mexico,6,11,0.4715,0.5285,New Mexico,Clemson,False
+2024,East,1,R64,Creighton,Colgate,3,14,0.9674,0.0326,Creighton,Creighton,True
+2024,East,1,R64,Florida,Colorado St.,7,10,0.4974,0.5026,Colorado St.,,
+2024,East,1,R64,Iowa St.,Saint Peter's,2,15,0.9842,0.0158,Iowa St.,Iowa St.,True
+2024,East,2,R32,Houston,Mississippi St.,1,8,0.8866,0.1134,Houston,Houston,True
+2024,East,2,R32,Saint Mary's,Auburn,5,4,0.1603,0.8397,Auburn,,
+2024,East,2,R32,New Mexico,Creighton,11,3,0.4109,0.5891,Creighton,Creighton,True
+2024,East,2,R32,Colorado St.,Iowa St.,10,2,0.2498,0.7502,Iowa St.,Iowa St.,True
+2024,East,3,S16,Houston,Auburn,1,4,0.4796,0.5204,Auburn,,
+2024,East,3,S16,Creighton,Iowa St.,3,2,0.4253,0.5747,Iowa St.,,
+2024,East,4,E8,Auburn,Iowa St.,4,2,0.6705,0.3295,Auburn,,
+2024,West,1,R64,North Carolina,Montana St.,1,16,0.9783,0.0217,North Carolina,North Carolina,True
+2024,West,1,R64,Nebraska,TCU,8,9,0.6305,0.3695,Nebraska,,
+2024,West,1,R64,San Diego St.,McNeese St.,5,12,0.8203,0.1797,San Diego St.,San Diego St.,True
+2024,West,1,R64,Duke,Vermont,4,13,0.971,0.029,Duke,Duke,True
+2024,West,1,R64,South Carolina,North Carolina St.,6,11,0.201,0.799,North Carolina St.,North Carolina St.,True
+2024,West,1,R64,Illinois,Morehead St.,3,14,0.9498,0.0502,Illinois,Illinois,True
+2024,West,1,R64,Texas,Nevada,7,10,0.5797,0.4203,Texas,Texas,True
+2024,West,1,R64,Marquette,South Dakota St.,2,15,0.9282,0.0718,Marquette,Marquette,True
+2024,West,2,R32,North Carolina,Nebraska,1,8,0.6959,0.3041,North Carolina,North Carolina,True
+2024,West,2,R32,San Diego St.,Duke,5,4,0.1884,0.8116,Duke,San Diego St.,False
+2024,West,2,R32,North Carolina St.,Illinois,11,3,0.2097,0.7903,Illinois,North Carolina St.,False
+2024,West,2,R32,Texas,Marquette,7,2,0.4423,0.5577,Marquette,Marquette,True
+2024,West,3,S16,North Carolina,Duke,1,4,0.3299,0.6701,Duke,Duke,True
+2024,West,3,S16,Illinois,Marquette,3,2,0.6317,0.3683,Illinois,Illinois,True
+2024,West,4,E8,Duke,Illinois,4,3,0.6453,0.3547,Duke,,
+2024,Midwest,1,R64,Purdue,Grambling St.,1,16,0.9937,0.0063,Purdue,Purdue,True
+2024,Midwest,1,R64,Utah St.,Texas A&M,8,9,0.2439,0.7561,Texas A&M,Utah St.,False
+2024,Midwest,1,R64,Wisconsin,UAB,5,12,0.9241,0.0759,Wisconsin,,
+2024,Midwest,1,R64,Kansas,Yale,4,13,0.7667,0.2333,Kansas,Kansas,True
+2024,Midwest,1,R64,Texas Tech,Oregon,6,11,0.643,0.357,Texas Tech,Oregon,False
+2024,Midwest,1,R64,Kentucky,Oakland,3,14,0.873,0.127,Kentucky,Oakland,False
+2024,Midwest,1,R64,Washington St.,Boise St.,7,10,0.3881,0.6119,Boise St.,Washington St.,False
+2024,Midwest,1,R64,Tennessee,Western Kentucky,2,15,0.9661,0.0339,Tennessee,Tennessee,True
+2024,Midwest,2,R32,Purdue,Texas A&M,1,9,0.8608,0.1392,Purdue,Purdue,True
+2024,Midwest,2,R32,Wisconsin,Kansas,5,4,0.6882,0.3118,Wisconsin,,
+2024,Midwest,2,R32,Texas Tech,Kentucky,6,3,0.4747,0.5253,Kentucky,,
+2024,Midwest,2,R32,Boise St.,Tennessee,10,2,0.1684,0.8316,Tennessee,Tennessee,True
+2024,Midwest,3,S16,Purdue,Wisconsin,1,5,0.8043,0.1957,Purdue,Purdue,True
+2024,Midwest,3,S16,Kentucky,Tennessee,3,2,0.1848,0.8152,Tennessee,Tennessee,True
+2024,Midwest,4,E8,Purdue,Tennessee,1,2,0.6305,0.3695,Purdue,Purdue,True
+2024,Final Four,5,F4,Connecticut,Auburn,1,4,0.6513,0.3487,Connecticut,Connecticut,True
+2024,Final Four,5,F4,Duke,Purdue,4,1,0.4461,0.5539,Purdue,Purdue,True
+2024,Championship,6,Champ,Connecticut,Purdue,1,1,0.6858,0.3142,Connecticut,Connecticut,True

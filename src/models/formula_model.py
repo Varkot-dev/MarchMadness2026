@@ -72,6 +72,9 @@ FEATURES = [
     # Houston (61 games vs 11 games before 2022). See feature/tourney-experience.
     "TRUE_QUALITY_SCORE",  # efficiency: AdjEM - 0.4*Luck. corr(rounds_won)=0.596
     "SEED_DIVERGENCE",     # underseeded identifier: corr(rounds_won)=0.313
+    # TOURNEY_EXP_LOG tested as 3rd feature — hurt mean ESPN (1083→1070) due to 11.4%
+    # imputed-to-zero teams distorting the coefficient. Kept in features_coaching.csv
+    # for future experimentation once name mapping coverage improves to ~95%+.
 ]
 
 # L2 regularization strength. Smaller C = stronger regularization.
@@ -174,7 +177,14 @@ def load_features() -> pd.DataFrame:
         if path.exists():
             if name != "features_coaching.csv":
                 log.info(f"Loaded features from {name}")
-            return pd.read_csv(path)
+            df = pd.read_csv(path)
+            # Impute experience features: NaN means no mapping found, treat as 0 (no prior experience)
+            for col in ("TOURNEY_EXP_MINUTES", "TOURNEY_EXP_LOG"):
+                if col in df.columns and df[col].isna().any():
+                    n = df[col].isna().sum()
+                    df[col] = df[col].fillna(0.0)
+                    log.info(f"Imputed {n} NaN values in {col} with 0 (no prior experience)")
+            return df
     raise FileNotFoundError(
         f"No feature file found in {PROCESSED_DIR}. "
         "Run src/features/efficiency.py to generate features_coaching.csv."
@@ -414,6 +424,8 @@ def extract_formula(model: LogisticRegression, scaler: StandardScaler,
         "COACH_PREMIUM":      "career tournament wins above seed expectation (Tom Izzo signal)",
         "ADJOE":              "adjusted offensive efficiency (pts per 100 possessions)",
         "ADJDE":              "adjusted defensive efficiency (lower = better defense)",
+        "TOURNEY_EXP_LOG":    "log1p(prior tournament minutes) — program experience in March Madness",
+        "TOURNEY_EXP_MINUTES":"raw cumulative prior NCAA tournament minutes played",
     }
 
     df = pd.DataFrame({

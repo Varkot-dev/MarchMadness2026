@@ -55,41 +55,41 @@ medium,Oregon,1,R64,Gonzaga
 medium,Purdue,2,R32,Gonzaga
 medium,Saint Mary's,1,R64,Gonzaga
 medium,St. John's,1,R64,Gonzaga
-medium,Tennessee,1,R64,Gonzaga
+medium,Tennessee,3,S16,Gonzaga
 medium,Texas A&M,1,R64,Gonzaga
 medium,Texas Tech,1,R64,Gonzaga
 medium,UC San Diego,2,R32,Gonzaga
-medium,UCLA,2,R32,Gonzaga
-medium,VCU,3,S16,Gonzaga
+medium,UCLA,1,R64,Gonzaga
+medium,VCU,2,R32,Gonzaga
 medium,Wisconsin,2,R32,Gonzaga
-chaos,Alabama,3,S16,Duke
-chaos,Arizona,2,R32,Duke
-chaos,Arkansas,5,F4,Duke
-chaos,Auburn,3,S16,Duke
-chaos,BYU,1,R64,Duke
-chaos,Baylor,1,R64,Duke
-chaos,Colorado St.,2,R32,Duke
-chaos,Connecticut,1,R64,Duke
-chaos,Duke,6,Champion,Duke
-chaos,Florida,2,R32,Duke
-chaos,Gonzaga,3,S16,Duke
-chaos,Houston,1,R64,Duke
-chaos,Iowa St.,1,R64,Duke
-chaos,Kentucky,1,R64,Duke
-chaos,Louisville,1,R64,Duke
-chaos,Marquette,1,R64,Duke
-chaos,Maryland,3,S16,Duke
-chaos,McNeese St.,1,R64,Duke
-chaos,Michigan St.,2,R32,Duke
-chaos,Missouri,2,R32,Duke
-chaos,Oregon,1,R64,Duke
-chaos,Purdue,1,R64,Duke
-chaos,Saint Mary's,1,R64,Duke
-chaos,St. John's,1,R64,Duke
-chaos,Tennessee,1,R64,Duke
-chaos,Texas A&M,1,R64,Duke
-chaos,Texas Tech,1,R64,Duke
-chaos,UC San Diego,2,R32,Duke
-chaos,UCLA,2,R32,Duke
-chaos,VCU,4,E8,Duke
-chaos,Wisconsin,2,R32,Duke
+chaos,Alabama,3,S16,Gonzaga
+chaos,Arizona,2,R32,Gonzaga
+chaos,Arkansas,4,E8,Gonzaga
+chaos,Auburn,4,E8,Gonzaga
+chaos,BYU,1,R64,Gonzaga
+chaos,Baylor,1,R64,Gonzaga
+chaos,Colorado St.,2,R32,Gonzaga
+chaos,Connecticut,1,R64,Gonzaga
+chaos,Duke,5,F4,Gonzaga
+chaos,Florida,2,R32,Gonzaga
+chaos,Gonzaga,6,Champion,Gonzaga
+chaos,Houston,1,R64,Gonzaga
+chaos,Iowa St.,1,R64,Gonzaga
+chaos,Kentucky,1,R64,Gonzaga
+chaos,Louisville,1,R64,Gonzaga
+chaos,Marquette,1,R64,Gonzaga
+chaos,Maryland,3,S16,Gonzaga
+chaos,McNeese St.,1,R64,Gonzaga
+chaos,Michigan St.,2,R32,Gonzaga
+chaos,Missouri,2,R32,Gonzaga
+chaos,Oregon,1,R64,Gonzaga
+chaos,Purdue,1,R64,Gonzaga
+chaos,Saint Mary's,1,R64,Gonzaga
+chaos,St. John's,1,R64,Gonzaga
+chaos,Tennessee,1,R64,Gonzaga
+chaos,Texas A&M,1,R64,Gonzaga
+chaos,Texas Tech,1,R64,Gonzaga
+chaos,UC San Diego,2,R32,Gonzaga
+chaos,UCLA,2,R32,Gonzaga
+chaos,VCU,3,S16,Gonzaga
+chaos,Wisconsin,2,R32,Gonzaga

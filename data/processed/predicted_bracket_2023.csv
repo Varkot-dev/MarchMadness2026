@@ -1,64 +1,64 @@
 year,region,round,round_name,team_a,team_b,seed_a,seed_b,prob_a,prob_b,predicted_winner,actual_winner,correct
-2023,South,1,R64,Alabama,Northern Kentucky,1,16,0.9692,0.0308,Alabama,Alabama,True
-2023,South,1,R64,Arkansas,Auburn,8,9,0.5811,0.4189,Arkansas,Arkansas,True
-2023,South,1,R64,Duke,College of Charleston,5,12,0.836,0.164,Duke,Duke,True
-2023,South,1,R64,Connecticut,Furman,4,13,0.978,0.022,Connecticut,Connecticut,True
-2023,South,1,R64,Creighton,Providence,6,11,0.7608,0.2392,Creighton,Creighton,True
-2023,South,1,R64,Baylor,Grand Canyon,3,14,0.8753,0.1247,Baylor,Baylor,True
-2023,South,1,R64,Michigan St.,Boise St.,7,10,0.5567,0.4433,Michigan St.,Michigan St.,True
-2023,South,1,R64,Arizona,Colgate,2,15,0.8964,0.1036,Arizona,,
-2023,South,2,R32,Alabama,Arkansas,1,8,0.7048,0.2952,Alabama,Alabama,True
-2023,South,2,R32,Duke,Connecticut,5,4,0.1362,0.8638,Connecticut,Connecticut,True
-2023,South,2,R32,Creighton,Baylor,6,3,0.7158,0.2842,Creighton,Creighton,True
-2023,South,2,R32,Michigan St.,Arizona,7,2,0.4026,0.5974,Arizona,Michigan St.,False
-2023,South,3,S16,Alabama,Connecticut,1,4,0.3057,0.6943,Connecticut,Connecticut,True
-2023,South,3,S16,Creighton,Arizona,6,2,0.6539,0.3461,Creighton,Creighton,True
-2023,South,4,E8,Connecticut,Creighton,4,6,0.7388,0.2612,Connecticut,Connecticut,True
-2023,East,1,R64,Houston,Texas A&M Corpus Chris,1,16,0.9748,0.0252,Houston,Houston,True
-2023,East,1,R64,Iowa,Florida Atlantic,8,9,0.1866,0.8134,Florida Atlantic,Florida Atlantic,True
-2023,East,1,R64,Miami FL,Drake,5,12,0.7794,0.2206,Miami FL,Miami FL,True
-2023,East,1,R64,Indiana,Iona,4,13,0.6399,0.3601,Indiana,Indiana,True
-2023,East,1,R64,Iowa St.,North Carolina St.,6,11,0.6118,0.3882,Iowa St.,,
-2023,East,1,R64,Gonzaga,Kennesaw St.,3,14,0.9499,0.0501,Gonzaga,Gonzaga,True
-2023,East,1,R64,Missouri,Penn St.,7,10,0.138,0.862,Penn St.,Missouri,False
-2023,East,1,R64,Marquette,Princeton,2,15,0.8651,0.1349,Marquette,Marquette,True
-2023,East,2,R32,Houston,Florida Atlantic,1,9,0.6086,0.3914,Houston,Houston,True
-2023,East,2,R32,Miami FL,Indiana,5,4,0.6452,0.3548,Miami FL,Miami FL,True
-2023,East,2,R32,Iowa St.,Gonzaga,6,3,0.2228,0.7772,Gonzaga,Gonzaga,True
-2023,East,2,R32,Penn St.,Marquette,10,2,0.3775,0.6225,Marquette,,
-2023,East,3,S16,Houston,Miami FL,1,5,0.8065,0.1935,Houston,Miami FL,False
-2023,East,3,S16,Gonzaga,Marquette,3,2,0.5986,0.4014,Gonzaga,Gonzaga,True
-2023,East,4,E8,Houston,Gonzaga,1,3,0.611,0.389,Houston,,
-2023,West,1,R64,Kansas,Howard,1,16,0.956,0.044,Kansas,Kansas,True
-2023,West,1,R64,Maryland,Illinois,8,9,0.6337,0.3663,Maryland,Maryland,True
-2023,West,1,R64,Saint Mary's,Oral Roberts,5,12,0.8858,0.1142,Saint Mary's,Saint Mary's,True
-2023,West,1,R64,Tennessee,Kent St.,4,13,0.9196,0.0804,Tennessee,Tennessee,True
-2023,West,1,R64,Kentucky,Mississippi St.,6,11,0.6958,0.3042,Kentucky,Kentucky,True
-2023,West,1,R64,Kansas St.,Montana St.,3,14,0.8218,0.1782,Kansas St.,Kansas St.,True
-2023,West,1,R64,Northwestern,USC,7,10,0.4838,0.5162,USC,Northwestern,False
-2023,West,1,R64,Texas,UNC Asheville,2,15,0.9599,0.0401,Texas,Texas,True
-2023,West,2,R32,Kansas,Maryland,1,8,0.4959,0.5041,Maryland,,
-2023,West,2,R32,Saint Mary's,Tennessee,5,4,0.3786,0.6214,Tennessee,Tennessee,True
-2023,West,2,R32,Kentucky,Kansas St.,6,3,0.5447,0.4553,Kentucky,Kansas St.,False
-2023,West,2,R32,USC,Texas,10,2,0.1735,0.8265,Texas,Texas,True
-2023,West,3,S16,Maryland,Tennessee,8,4,0.3198,0.6802,Tennessee,,
-2023,West,3,S16,Kentucky,Texas,6,2,0.2556,0.7444,Texas,Texas,True
-2023,West,4,E8,Tennessee,Texas,4,2,0.5604,0.4396,Tennessee,,
-2023,Midwest,1,R64,Purdue,Southeast Missouri St.,1,16,0.9809,0.0191,Purdue,,
-2023,Midwest,1,R64,Memphis,West Virginia,8,9,0.4505,0.5495,West Virginia,,
-2023,Midwest,1,R64,San Diego St.,VCU,5,12,0.8333,0.1667,San Diego St.,San Diego St.,True
-2023,Midwest,1,R64,Virginia,Louisiana Lafayette,4,13,0.6473,0.3527,Virginia,,
-2023,Midwest,1,R64,TCU,Arizona St.,6,11,0.713,0.287,TCU,TCU,True
-2023,Midwest,1,R64,Xavier,UC Santa Barbara,3,14,0.8821,0.1179,Xavier,Xavier,True
-2023,Midwest,1,R64,Texas A&M,Utah St.,7,10,0.2909,0.7091,Utah St.,,
-2023,Midwest,1,R64,UCLA,Vermont,2,15,0.9596,0.0404,UCLA,UCLA,True
-2023,Midwest,2,R32,Purdue,West Virginia,1,9,0.4421,0.5579,West Virginia,,
-2023,Midwest,2,R32,San Diego St.,Virginia,5,4,0.8135,0.1865,San Diego St.,San Diego St.,True
-2023,Midwest,2,R32,TCU,Xavier,6,3,0.4307,0.5693,Xavier,Xavier,True
-2023,Midwest,2,R32,Utah St.,UCLA,10,2,0.2763,0.7237,UCLA,UCLA,True
-2023,Midwest,3,S16,West Virginia,San Diego St.,9,5,0.5722,0.4278,West Virginia,San Diego St.,False
-2023,Midwest,3,S16,Xavier,UCLA,3,2,0.2189,0.7811,UCLA,,
-2023,Midwest,4,E8,West Virginia,UCLA,9,2,0.3512,0.6488,UCLA,,
-2023,Final Four,5,F4,Connecticut,Houston,4,1,0.6817,0.3183,Connecticut,Connecticut,True
-2023,Final Four,5,F4,Tennessee,UCLA,4,2,0.4282,0.5718,UCLA,,
-2023,Championship,6,Champ,Connecticut,UCLA,4,2,0.6583,0.3417,Connecticut,Connecticut,True
+2023,South,1,R64,Alabama,Northern Kentucky,1,16,0.9727,0.0273,Alabama,Alabama,True
+2023,South,1,R64,Arkansas,Auburn,8,9,0.5843,0.4157,Arkansas,Arkansas,True
+2023,South,1,R64,Duke,College of Charleston,5,12,0.8447,0.1553,Duke,Duke,True
+2023,South,1,R64,Connecticut,Furman,4,13,0.981,0.019,Connecticut,Connecticut,True
+2023,South,1,R64,Creighton,Providence,6,11,0.7689,0.2311,Creighton,Creighton,True
+2023,South,1,R64,Baylor,Grand Canyon,3,14,0.883,0.117,Baylor,Baylor,True
+2023,South,1,R64,Michigan St.,Boise St.,7,10,0.5587,0.4413,Michigan St.,Michigan St.,True
+2023,South,1,R64,Arizona,Colgate,2,15,0.9034,0.0966,Arizona,,
+2023,South,2,R32,Alabama,Arkansas,1,8,0.7108,0.2892,Alabama,Alabama,True
+2023,South,2,R32,Duke,Connecticut,5,4,0.128,0.872,Connecticut,Connecticut,True
+2023,South,2,R32,Creighton,Baylor,6,3,0.7237,0.2763,Creighton,Creighton,True
+2023,South,2,R32,Michigan St.,Arizona,7,2,0.3995,0.6005,Arizona,Michigan St.,False
+2023,South,3,S16,Alabama,Connecticut,1,4,0.2985,0.7015,Connecticut,Connecticut,True
+2023,South,3,S16,Creighton,Arizona,6,2,0.6604,0.3396,Creighton,Creighton,True
+2023,South,4,E8,Connecticut,Creighton,4,6,0.746,0.254,Connecticut,Connecticut,True
+2023,East,1,R64,Houston,Texas A&M Corpus Chris,1,16,0.9778,0.0222,Houston,Houston,True
+2023,East,1,R64,Iowa,Florida Atlantic,8,9,0.1774,0.8226,Florida Atlantic,Florida Atlantic,True
+2023,East,1,R64,Miami FL,Drake,5,12,0.7879,0.2121,Miami FL,Miami FL,True
+2023,East,1,R64,Indiana,Iona,4,13,0.6444,0.3556,Indiana,Indiana,True
+2023,East,1,R64,Iowa St.,North Carolina St.,6,11,0.6157,0.3843,Iowa St.,,
+2023,East,1,R64,Gonzaga,Kennesaw St.,3,14,0.9549,0.0451,Gonzaga,Gonzaga,True
+2023,East,1,R64,Missouri,Penn St.,7,10,0.1289,0.8711,Penn St.,Missouri,False
+2023,East,1,R64,Marquette,Princeton,2,15,0.8728,0.1272,Marquette,Marquette,True
+2023,East,2,R32,Houston,Florida Atlantic,1,9,0.6111,0.3889,Houston,Houston,True
+2023,East,2,R32,Miami FL,Indiana,5,4,0.6511,0.3489,Miami FL,Miami FL,True
+2023,East,2,R32,Iowa St.,Gonzaga,6,3,0.2143,0.7857,Gonzaga,Gonzaga,True
+2023,East,2,R32,Penn St.,Marquette,10,2,0.3738,0.6262,Marquette,,
+2023,East,3,S16,Houston,Miami FL,1,5,0.8147,0.1853,Houston,Miami FL,False
+2023,East,3,S16,Gonzaga,Marquette,3,2,0.6027,0.3973,Gonzaga,Gonzaga,True
+2023,East,4,E8,Houston,Gonzaga,1,3,0.6146,0.3854,Houston,,
+2023,West,1,R64,Kansas,Howard,1,16,0.9604,0.0396,Kansas,Kansas,True
+2023,West,1,R64,Maryland,Illinois,8,9,0.6389,0.3611,Maryland,Maryland,True
+2023,West,1,R64,Saint Mary's,Oral Roberts,5,12,0.8938,0.1062,Saint Mary's,Saint Mary's,True
+2023,West,1,R64,Tennessee,Kent St.,4,13,0.9264,0.0736,Tennessee,Tennessee,True
+2023,West,1,R64,Kentucky,Mississippi St.,6,11,0.7027,0.2973,Kentucky,Kentucky,True
+2023,West,1,R64,Kansas St.,Montana St.,3,14,0.8296,0.1704,Kansas St.,Kansas St.,True
+2023,West,1,R64,Northwestern,USC,7,10,0.4828,0.5172,USC,Northwestern,False
+2023,West,1,R64,Texas,UNC Asheville,2,15,0.9642,0.0358,Texas,Texas,True
+2023,West,2,R32,Kansas,Maryland,1,8,0.4943,0.5057,Maryland,,
+2023,West,2,R32,Saint Mary's,Tennessee,5,4,0.3741,0.6259,Tennessee,Tennessee,True
+2023,West,2,R32,Kentucky,Kansas St.,6,3,0.547,0.453,Kentucky,Kansas St.,False
+2023,West,2,R32,USC,Texas,10,2,0.1651,0.8349,Texas,Texas,True
+2023,West,3,S16,Maryland,Tennessee,8,4,0.3138,0.6862,Tennessee,,
+2023,West,3,S16,Kentucky,Texas,6,2,0.248,0.752,Texas,Texas,True
+2023,West,4,E8,Tennessee,Texas,4,2,0.5633,0.4367,Tennessee,,
+2023,Midwest,1,R64,Purdue,Southeast Missouri St.,1,16,0.9834,0.0166,Purdue,,
+2023,Midwest,1,R64,Memphis,West Virginia,8,9,0.4484,0.5516,West Virginia,,
+2023,Midwest,1,R64,San Diego St.,VCU,5,12,0.842,0.158,San Diego St.,San Diego St.,True
+2023,Midwest,1,R64,Virginia,Louisiana Lafayette,4,13,0.6517,0.3483,Virginia,,
+2023,Midwest,1,R64,TCU,Arizona St.,6,11,0.7203,0.2797,TCU,TCU,True
+2023,Midwest,1,R64,Xavier,UC Santa Barbara,3,14,0.8896,0.1104,Xavier,Xavier,True
+2023,Midwest,1,R64,Texas A&M,Utah St.,7,10,0.2829,0.7171,Utah St.,,
+2023,Midwest,1,R64,UCLA,Vermont,2,15,0.964,0.036,UCLA,UCLA,True
+2023,Midwest,2,R32,Purdue,West Virginia,1,9,0.4383,0.5617,West Virginia,,
+2023,Midwest,2,R32,San Diego St.,Virginia,5,4,0.8227,0.1773,San Diego St.,San Diego St.,True
+2023,Midwest,2,R32,TCU,Xavier,6,3,0.4282,0.5718,Xavier,Xavier,True
+2023,Midwest,2,R32,Utah St.,UCLA,10,2,0.2699,0.7301,UCLA,UCLA,True
+2023,Midwest,3,S16,West Virginia,San Diego St.,9,5,0.5758,0.4242,West Virginia,San Diego St.,False
+2023,Midwest,3,S16,Xavier,UCLA,3,2,0.2107,0.7893,UCLA,,
+2023,Midwest,4,E8,West Virginia,UCLA,9,2,0.3471,0.6529,UCLA,,
+2023,Final Four,5,F4,Connecticut,Houston,4,1,0.6886,0.3114,Connecticut,Connecticut,True
+2023,Final Four,5,F4,Tennessee,UCLA,4,2,0.426,0.574,UCLA,,
+2023,Championship,6,Champ,Connecticut,UCLA,4,2,0.6643,0.3357,Connecticut,Connecticut,True

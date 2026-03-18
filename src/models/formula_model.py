@@ -59,15 +59,19 @@ TRAIN_YEARS  = list(range(2013, 2022))   # 2013–2021 inclusive, excl. 2020
 HOLDOUT_YEARS = [2022, 2023, 2024]       # predict these, never seen in training
 
 FEATURES = [
-    # SHAP-validated feature set (temporal CV across 8 folds, 2016-2024):
-    # With 668 tournament games, adding correlated features (ADJOE, ADJDE, QMS,
-    # COACH_PREMIUM) hurts CV log loss vs the 2-feature baseline. SHAP confirms
-    # TQS and SEED_DIVERGENCE dominate mean|SHAP| (0.114 and 0.116 respectively),
-    # while all others are <0.04. The sign-flipping in SHAP across folds is a
-    # collinearity artifact: TQS and ADJOE/ADJDE share variance, so L2 arbitrarily
-    # assigns opposing signs. Bottom line: 2 features is optimal at this sample size.
-    "TRUE_QUALITY_SCORE",  # mean|SHAP|=0.114 — dominant strength signal
-    "SEED_DIVERGENCE",     # mean|SHAP|=0.116 — underseeded upset identifier
+    # 2-feature set validated by SHAP temporal CV (8 folds, 2016-2024).
+    #
+    # WAB was investigated as a 3rd feature to fix Houston-over-Kansas 2022
+    # (Kansas WAB=10.4 vs Houston WAB=6.2 despite similar TQS). However TQS
+    # and WAB are r=0.93 correlated — L2 regression assigns WAB a *negative*
+    # weight when both are present (collinearity sign flip), so adding WAB
+    # does not flip Kansas over Houston in any C configuration tested.
+    #
+    # The likely fix is tournament experience (prior games/minutes), which
+    # is orthogonal to efficiency and gave Kansas a 5.5x advantage over
+    # Houston (61 games vs 11 games before 2022). See feature/tourney-experience.
+    "TRUE_QUALITY_SCORE",  # efficiency: AdjEM - 0.4*Luck. corr(rounds_won)=0.596
+    "SEED_DIVERGENCE",     # underseeded identifier: corr(rounds_won)=0.313
 ]
 
 # L2 regularization strength. Smaller C = stronger regularization.
@@ -404,6 +408,7 @@ def extract_formula(model: LogisticRegression, scaler: StandardScaler,
 
     interpretations = {
         "TRUE_QUALITY_SCORE": "higher = stronger team (AdjEM - 0.4*Luck)",
+        "WAB":                "wins above bubble — resume quality / schedule difficulty",
         "SEED_DIVERGENCE":    "positive = underseeded (KenPom ranks them better than seed)",
         "QMS":                "quality momentum — weighted wins vs top-25/50/100 teams",
         "COACH_PREMIUM":      "career tournament wins above seed expectation (Tom Izzo signal)",

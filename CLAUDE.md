@@ -224,8 +224,11 @@ Top features by impact (see `data/processed/formula_weights.csv`):
   predictor not yet implemented
 - **No unit tests for models** — tests/ only covers features; simulator/optimizer/formula_model
   have no test coverage
-- **2022 champion badly wrong** — model missed Kansas entirely; worth investigating what
-  features would have differentiated Kansas from Houston that year
+- **2022 champion badly wrong — root cause identified:** Houston had TQS=27.70/SEED_DIV=+4
+  vs Kansas TQS=27.47/SEED_DIV=0. WAB was investigated (Kansas 10.4 vs Houston 6.2) but
+  r=0.93 with TQS causes sign-flip collinearity — adding WAB doesn't flip the pick.
+  Tournament experience is the likely fix: Kansas had 61 prior tourney games vs Houston's 11.
+  This will be addressed by `feature/tourney-experience` branch (other agent).
 
 ---
 

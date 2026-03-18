@@ -1,64 +1,64 @@
 round,region,team_a,team_b,seed_a,seed_b,prob_a,prob_b,predicted_winner,actual_winner,correct
-1,South,Kansas,Texas Southern,1,16.0,0.9575,0.0425,Kansas,Kansas,True
-1,South,San Diego St.,Creighton,8,9.0,0.4515,0.5485,Creighton,Creighton,True
-1,South,Iowa St.,Richmond,11,12.0,0.6538,0.3462,Iowa St.,Iowa St.,True
-1,South,Illinois,Chattanooga,4,13.0,0.695,0.305,Illinois,Illinois,True
-1,South,LSU,Notre Dame,6,11.0,0.4875,0.5125,Notre Dame,Notre Dame,True
-1,South,Tennessee,Longwood,3,14.0,0.8656,0.1344,Tennessee,Tennessee,True
-1,South,USC,Miami FL,7,10.0,0.508,0.492,USC,Miami FL,False
-1,South,Auburn,Saint Peter's,2,15.0,0.9185,0.0815,Auburn,Auburn,True
-2,South,Kansas,Creighton,1,9.0,0.8159,0.1841,Kansas,Kansas,True
-2,South,Iowa St.,Illinois,11,4.0,0.3846,0.6154,Illinois,Iowa St.,False
-2,South,Notre Dame,Tennessee,11,3.0,0.3231,0.6769,Tennessee,,
-2,South,USC,Auburn,7,2.0,0.3755,0.6245,Auburn,,
-3,South,Kansas,Illinois,1,4.0,0.7458,0.2542,Kansas,Kansas,True
-3,South,Tennessee,Auburn,3,2.0,0.5182,0.4818,Tennessee,,
-4,South,Kansas,Tennessee,1,3.0,0.6372,0.3628,Kansas,Kansas,True
+1,South,Kansas,Texas Southern,1,16.0,0.9469,0.0531,Kansas,Kansas,True
+1,South,San Diego St.,Creighton,8,9.0,0.5024,0.4976,San Diego St.,Creighton,False
+1,South,Iowa St.,Richmond,11,12.0,0.6165,0.3835,Iowa St.,Iowa St.,True
+1,South,Illinois,Chattanooga,4,13.0,0.6646,0.3354,Illinois,Illinois,True
+1,South,LSU,Notre Dame,6,11.0,0.4942,0.5058,Notre Dame,Notre Dame,True
+1,South,Tennessee,Longwood,3,14.0,0.8182,0.1818,Tennessee,Tennessee,True
+1,South,USC,Miami FL,7,10.0,0.484,0.516,Miami FL,Miami FL,True
+1,South,Auburn,Saint Peter's,2,15.0,0.9031,0.0969,Auburn,Auburn,True
+2,South,Kansas,San Diego St.,1,8.0,0.7232,0.2768,Kansas,Kansas,True
+2,South,Iowa St.,Illinois,11,4.0,0.4469,0.5531,Illinois,Iowa St.,False
+2,South,Notre Dame,Tennessee,11,3.0,0.3528,0.6472,Tennessee,,
+2,South,Miami FL,Auburn,10,2.0,0.4103,0.5897,Auburn,Miami FL,False
+3,South,Kansas,Illinois,1,4.0,0.7182,0.2818,Kansas,Kansas,True
+3,South,Tennessee,Auburn,3,2.0,0.3959,0.6041,Auburn,,
+4,South,Kansas,Auburn,1,2.0,0.5201,0.4799,Kansas,Kansas,True
 1,East,Arizona,Seed 16,1,,0.5,0.5,Arizona,Arizona,True
-1,East,Seton Hall,TCU,8,9.0,0.4807,0.5193,TCU,TCU,True
-1,East,Connecticut,New Mexico St.,5,12.0,0.6746,0.3254,Connecticut,New Mexico St.,False
-1,East,UCLA,Akron,4,13.0,0.8666,0.1334,UCLA,UCLA,True
-1,East,LSU,Iowa St.,6,11.0,0.5484,0.4516,LSU,Iowa St.,False
-1,East,Wisconsin,Colgate,3,14.0,0.8851,0.1149,Wisconsin,Wisconsin,True
-1,East,Michigan,San Diego St.,11,8.0,0.5603,0.4397,Michigan,Michigan,True
+1,East,Seton Hall,TCU,8,9.0,0.6058,0.3942,Seton Hall,TCU,False
+1,East,Connecticut,New Mexico St.,5,12.0,0.8333,0.1667,Connecticut,New Mexico St.,False
+1,East,UCLA,Akron,4,13.0,0.8323,0.1677,UCLA,UCLA,True
+1,East,LSU,Iowa St.,6,11.0,0.5038,0.4962,LSU,Iowa St.,False
+1,East,Wisconsin,Colgate,3,14.0,0.8819,0.1181,Wisconsin,Wisconsin,True
+1,East,Michigan,San Diego St.,11,8.0,0.4829,0.5171,San Diego St.,Michigan,False
 1,East,Villanova,Seed 15,2,,0.5,0.5,Villanova,Villanova,True
-2,East,Arizona,TCU,1,9.0,0.7424,0.2576,Arizona,Arizona,True
-2,East,Connecticut,UCLA,5,4.0,0.3867,0.6133,UCLA,UCLA,True
-2,East,LSU,Wisconsin,6,3.0,0.3715,0.6285,Wisconsin,,
-2,East,Michigan,Villanova,11,2.0,0.2748,0.7252,Villanova,Michigan,False
-3,East,Arizona,UCLA,1,4.0,0.6187,0.3813,Arizona,,
-3,East,Wisconsin,Villanova,3,2.0,0.4119,0.5881,Villanova,Villanova,True
-4,East,Arizona,Villanova,1,2.0,0.5547,0.4453,Arizona,Villanova,False
-1,West,Gonzaga,Georgia St.,1,16.0,0.9177,0.0823,Gonzaga,Gonzaga,True
-1,West,Davidson,Boise St.,10,8.0,0.5184,0.4816,Davidson,,
-1,West,Iowa,UAB,5,12.0,0.7165,0.2835,Iowa,,
-1,West,Duke,South Dakota St.,2,13.0,0.8006,0.1994,Duke,Duke,True
-1,West,Alabama,Notre Dame,6,11.0,0.5163,0.4837,Alabama,Notre Dame,False
-1,West,Texas Tech,Montana St.,3,14.0,0.8008,0.1992,Texas Tech,Texas Tech,True
-1,West,Michigan St.,Miami FL,7,10.0,0.5038,0.4962,Michigan St.,Michigan St.,True
-1,West,Memphis,Cal St. Fullerton,9,15.0,0.8045,0.1955,Memphis,Memphis,True
-2,West,Gonzaga,Davidson,1,10.0,0.7401,0.2599,Gonzaga,Gonzaga,True
-2,West,Iowa,Duke,5,2.0,0.3571,0.6429,Duke,Duke,True
-2,West,Alabama,Texas Tech,6,3.0,0.47,0.53,Texas Tech,Texas Tech,True
-2,West,Michigan St.,Memphis,7,9.0,0.5453,0.4547,Michigan St.,,
-3,West,Gonzaga,Duke,1,2.0,0.4929,0.5071,Duke,Duke,True
-3,West,Texas Tech,Michigan St.,3,7.0,0.5109,0.4891,Texas Tech,,
-4,West,Duke,Texas Tech,2,3.0,0.6921,0.3079,Duke,Duke,True
-1,Midwest,Baylor,Wright St.,1,16.0,0.9407,0.0593,Baylor,Baylor,True
+2,East,Arizona,Seton Hall,1,8.0,0.7434,0.2566,Arizona,Arizona,True
+2,East,Connecticut,UCLA,5,4.0,0.5691,0.4309,Connecticut,UCLA,False
+2,East,LSU,Wisconsin,6,3.0,0.3583,0.6417,Wisconsin,,
+2,East,San Diego St.,Villanova,8,2.0,0.1985,0.8015,Villanova,Villanova,True
+3,East,Arizona,Connecticut,1,5.0,0.4627,0.5373,Connecticut,,
+3,East,Wisconsin,Villanova,3,2.0,0.2717,0.7283,Villanova,Villanova,True
+4,East,Connecticut,Villanova,5,2.0,0.3716,0.6284,Villanova,Villanova,True
+1,West,Gonzaga,Georgia St.,1,16.0,0.9543,0.0457,Gonzaga,Gonzaga,True
+1,West,Davidson,Boise St.,10,8.0,0.5606,0.4394,Davidson,,
+1,West,Iowa,UAB,5,12.0,0.7132,0.2868,Iowa,,
+1,West,Duke,South Dakota St.,2,13.0,0.7758,0.2242,Duke,Duke,True
+1,West,Alabama,Notre Dame,6,11.0,0.5835,0.4165,Alabama,Notre Dame,False
+1,West,Texas Tech,Montana St.,3,14.0,0.823,0.177,Texas Tech,Texas Tech,True
+1,West,Michigan St.,Miami FL,7,10.0,0.7044,0.2956,Michigan St.,Michigan St.,True
+1,West,Memphis,Cal St. Fullerton,9,15.0,0.7947,0.2053,Memphis,Memphis,True
+2,West,Gonzaga,Davidson,1,10.0,0.8203,0.1797,Gonzaga,Gonzaga,True
+2,West,Iowa,Duke,5,2.0,0.3358,0.6642,Duke,Duke,True
+2,West,Alabama,Texas Tech,6,3.0,0.4442,0.5558,Texas Tech,Texas Tech,True
+2,West,Michigan St.,Memphis,7,9.0,0.8153,0.1847,Michigan St.,,
+3,West,Gonzaga,Duke,1,2.0,0.6384,0.3616,Gonzaga,Duke,False
+3,West,Texas Tech,Michigan St.,3,7.0,0.2741,0.7259,Michigan St.,,
+4,West,Gonzaga,Michigan St.,1,7.0,0.5455,0.4545,Gonzaga,,
+1,Midwest,Baylor,Wright St.,1,16.0,0.9513,0.0487,Baylor,Baylor,True
 1,Midwest,Marquette,Seed 9,9,,0.5,0.5,Marquette,,
-1,Midwest,Houston,New Mexico St.,5,12.0,0.7636,0.2364,Houston,Houston,True
-1,Midwest,Arkansas,Vermont,4,13.0,0.7219,0.2781,Arkansas,Arkansas,True
-1,Midwest,Texas,Virginia Tech,6,11.0,0.6282,0.3718,Texas,Texas,True
-1,Midwest,Purdue,Yale,3,14.0,0.9136,0.0864,Purdue,Purdue,True
-1,Midwest,Murray St.,San Francisco,7,10.0,0.5878,0.4122,Murray St.,Murray St.,True
-1,Midwest,Kentucky,Saint Peter's,2,15.0,0.9321,0.0679,Kentucky,Saint Peter's,False
-2,Midwest,Baylor,Marquette,1,9.0,0.7714,0.2286,Baylor,,
-2,Midwest,Houston,Arkansas,5,4.0,0.6004,0.3996,Houston,Houston,True
-2,Midwest,Texas,Purdue,6,3.0,0.3544,0.6456,Purdue,Purdue,True
-2,Midwest,Murray St.,Kentucky,7,2.0,0.2628,0.7372,Kentucky,,
-3,Midwest,Baylor,Houston,1,5.0,0.5932,0.4068,Baylor,Houston,False
-3,Midwest,Purdue,Kentucky,3,2.0,0.4897,0.5103,Kentucky,,
-4,Midwest,Baylor,Kentucky,1,2.0,0.5155,0.4845,Baylor,,
-5,Final Four,Kansas,Arizona,1,1.0,0.5625,0.4375,Kansas,Kansas,True
-5,Final Four,Duke,Baylor,2,1.0,0.517,0.483,Duke,,
-6,Championship,Kansas,Duke,1,2.0,0.5762,0.4238,Kansas,Kansas,True
+1,Midwest,Houston,New Mexico St.,5,12.0,0.8487,0.1513,Houston,Houston,True
+1,Midwest,Arkansas,Vermont,4,13.0,0.8166,0.1834,Arkansas,Arkansas,True
+1,Midwest,Texas,Virginia Tech,6,11.0,0.789,0.211,Texas,Texas,True
+1,Midwest,Purdue,Yale,3,14.0,0.8875,0.1125,Purdue,Purdue,True
+1,Midwest,Murray St.,San Francisco,7,10.0,0.5521,0.4479,Murray St.,Murray St.,True
+1,Midwest,Kentucky,Saint Peter's,2,15.0,0.9702,0.0298,Kentucky,Saint Peter's,False
+2,Midwest,Baylor,Marquette,1,9.0,0.8686,0.1314,Baylor,,
+2,Midwest,Houston,Arkansas,5,4.0,0.5763,0.4237,Houston,Houston,True
+2,Midwest,Texas,Purdue,6,3.0,0.5594,0.4406,Texas,Purdue,False
+2,Midwest,Murray St.,Kentucky,7,2.0,0.1071,0.8929,Kentucky,,
+3,Midwest,Baylor,Houston,1,5.0,0.4986,0.5014,Houston,Houston,True
+3,Midwest,Texas,Kentucky,6,2.0,0.2244,0.7756,Kentucky,,
+4,Midwest,Houston,Kentucky,5,2.0,0.2413,0.7587,Kentucky,,
+5,Final Four,Kansas,Villanova,1,2.0,0.3929,0.6071,Villanova,Kansas,False
+5,Final Four,Gonzaga,Kentucky,1,2.0,0.3629,0.6371,Kentucky,,
+6,Championship,Villanova,Kentucky,2,2.0,0.324,0.676,Kentucky,,

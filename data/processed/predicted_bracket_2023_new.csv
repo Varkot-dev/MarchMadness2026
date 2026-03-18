@@ -1,64 +1,64 @@
 round,region,team_a,team_b,seed_a,seed_b,prob_a,prob_b,predicted_winner,actual_winner,correct
 1,South,Alabama,Seed 16,1,,0.5,0.5,Alabama,Alabama,True
-1,South,Maryland,West Virginia,8,9.0,0.4758,0.5242,West Virginia,Maryland,False
-1,South,San Diego St.,College of Charleston,5,12.0,0.6907,0.3093,San Diego St.,San Diego St.,True
-1,South,Virginia,Furman,4,13.0,0.7454,0.2546,Virginia,Furman,False
-1,South,Creighton,North Carolina St.,6,11.0,0.5534,0.4466,Creighton,Creighton,True
-1,South,Baylor,UC Santa Barbara,3,14.0,0.7741,0.2259,Baylor,Baylor,True
-1,South,Missouri,Utah St.,7,10.0,0.5303,0.4697,Missouri,Missouri,True
-1,South,Arizona,Princeton,2,15.0,0.8935,0.1065,Arizona,Princeton,False
-2,South,Alabama,West Virginia,1,9.0,0.7747,0.2253,Alabama,Alabama,True
-2,South,San Diego St.,Virginia,5,4.0,0.5214,0.4786,San Diego St.,San Diego St.,True
-2,South,Creighton,Baylor,6,3.0,0.3799,0.6201,Baylor,Creighton,False
-2,South,Missouri,Arizona,7,2.0,0.285,0.715,Arizona,,
-3,South,Alabama,San Diego St.,1,5.0,0.7013,0.2987,Alabama,San Diego St.,False
-3,South,Baylor,Arizona,3,2.0,0.4095,0.5905,Arizona,,
-4,South,Alabama,Arizona,1,2.0,0.5435,0.4565,Alabama,,
-1,East,Kansas,Howard,1,16.0,0.9435,0.0565,Kansas,Kansas,True
-1,East,Arkansas,Illinois,8,9.0,0.4684,0.5316,Illinois,Arkansas,False
-1,East,Saint Mary's,VCU,5,12.0,0.5816,0.4184,Saint Mary's,Saint Mary's,True
-1,East,Connecticut,Iona,4,13.0,0.808,0.192,Connecticut,Connecticut,True
-1,East,TCU,Arizona St.,6,11.0,0.58,0.42,TCU,TCU,True
-1,East,Gonzaga,Grand Canyon,3,14.0,0.8785,0.1215,Gonzaga,Gonzaga,True
-1,East,Northwestern,Boise St.,7,10.0,0.5238,0.4762,Northwestern,Northwestern,True
-1,East,UCLA,UNC Asheville,2,15.0,0.8871,0.1129,UCLA,UCLA,True
-2,East,Kansas,Illinois,1,9.0,0.7474,0.2526,Kansas,,
-2,East,Saint Mary's,Connecticut,5,4.0,0.3722,0.6278,Connecticut,Connecticut,True
-2,East,TCU,Gonzaga,6,3.0,0.2831,0.7169,Gonzaga,Gonzaga,True
-2,East,Northwestern,UCLA,7,2.0,0.2196,0.7804,UCLA,UCLA,True
-3,East,Kansas,Connecticut,1,4.0,0.6419,0.3581,Kansas,Connecticut,False
-3,East,Gonzaga,UCLA,3,2.0,0.4848,0.5152,UCLA,Gonzaga,False
-4,East,Kansas,UCLA,1,2.0,0.5195,0.4805,Kansas,,
-1,West,Purdue,Texas Southern,1,16.0,0.9756,0.0244,Purdue,,
-1,West,Memphis,Florida Atlantic,8,9.0,0.5599,0.4401,Memphis,Florida Atlantic,False
-1,West,Duke,Oral Roberts,5,12.0,0.6906,0.3094,Duke,Duke,True
-1,West,Tennessee,Louisiana Lafayette,4,13.0,0.6647,0.3353,Tennessee,Tennessee,True
-1,West,Kentucky,Providence,6,11.0,0.5207,0.4793,Kentucky,Kentucky,True
-1,West,Kansas St.,Kennesaw St.,3,14.0,0.7386,0.2614,Kansas St.,Kansas St.,True
-1,West,Michigan St.,USC,7,10.0,0.5086,0.4914,Michigan St.,Michigan St.,True
-1,West,Marquette,Montana St.,2,14.0,0.8707,0.1293,Marquette,Marquette,True
-2,West,Purdue,Memphis,1,8.0,0.6807,0.3193,Purdue,,
-2,West,Duke,Tennessee,5,4.0,0.5962,0.4038,Duke,Tennessee,False
-2,West,Kentucky,Kansas St.,6,3.0,0.4717,0.5283,Kansas St.,Kansas St.,True
-2,West,Michigan St.,Marquette,7,2.0,0.3388,0.6612,Marquette,Michigan St.,False
-3,West,Purdue,Duke,1,5.0,0.6332,0.3668,Purdue,,
-3,West,Kansas St.,Marquette,3,2.0,0.3465,0.6535,Marquette,Kansas St.,False
-4,West,Purdue,Marquette,1,2.0,0.5539,0.4461,Purdue,,
-1,Midwest,Houston,Northern Kentucky,1,16.0,0.9335,0.0665,Houston,Houston,True
-1,Midwest,Iowa,Auburn,8,9.0,0.5208,0.4792,Iowa,Auburn,False
-1,Midwest,Miami FL,Drake,5,12.0,0.7265,0.2735,Miami FL,Miami FL,True
-1,Midwest,Indiana,Kent St.,4,13.0,0.7504,0.2496,Indiana,Indiana,True
-1,Midwest,Iowa St.,Pittsburgh,6,11.0,0.5699,0.4301,Iowa St.,Pittsburgh,False
-1,Midwest,Xavier,Kennesaw St.,3,14.0,0.7922,0.2078,Xavier,Xavier,True
-1,Midwest,Texas A&M,Penn St.,7,10.0,0.5983,0.4017,Texas A&M,Penn St.,False
-1,Midwest,Texas,Colgate,2,15.0,0.8781,0.1219,Texas,Texas,True
-2,Midwest,Houston,Iowa,1,8.0,0.7426,0.2574,Houston,Houston,True
-2,Midwest,Miami FL,Indiana,5,4.0,0.4519,0.5481,Indiana,Miami FL,False
-2,Midwest,Iowa St.,Xavier,6,3.0,0.3347,0.6653,Xavier,Xavier,True
-2,Midwest,Texas A&M,Texas,7,2.0,0.338,0.662,Texas,Texas,True
-3,Midwest,Houston,Indiana,1,4.0,0.6297,0.3703,Houston,,
-3,Midwest,Xavier,Texas,3,2.0,0.4144,0.5856,Texas,Texas,True
-4,Midwest,Houston,Texas,1,2.0,0.526,0.474,Houston,,
-5,Final Four,Alabama,Kansas,1,1.0,0.5041,0.4959,Alabama,,
-5,Final Four,Purdue,Houston,1,1.0,0.5253,0.4747,Purdue,,
-6,Championship,Alabama,Purdue,1,1.0,0.5215,0.4785,Alabama,,
+1,South,Maryland,West Virginia,8,9.0,0.4176,0.5824,West Virginia,Maryland,False
+1,South,San Diego St.,College of Charleston,5,12.0,0.7853,0.2147,San Diego St.,San Diego St.,True
+1,South,Virginia,Furman,4,13.0,0.523,0.477,Virginia,Furman,False
+1,South,Creighton,North Carolina St.,6,11.0,0.5566,0.4434,Creighton,Creighton,True
+1,South,Baylor,UC Santa Barbara,3,14.0,0.7819,0.2181,Baylor,Baylor,True
+1,South,Missouri,Utah St.,7,10.0,0.5067,0.4933,Missouri,Missouri,True
+1,South,Arizona,Princeton,2,15.0,0.8205,0.1795,Arizona,Princeton,False
+2,South,Alabama,West Virginia,1,9.0,0.8076,0.1924,Alabama,Alabama,True
+2,South,San Diego St.,Virginia,5,4.0,0.7818,0.2182,San Diego St.,San Diego St.,True
+2,South,Creighton,Baylor,6,3.0,0.4251,0.5749,Baylor,Creighton,False
+2,South,Missouri,Arizona,7,2.0,0.3697,0.6303,Arizona,,
+3,South,Alabama,San Diego St.,1,5.0,0.6646,0.3354,Alabama,San Diego St.,False
+3,South,Baylor,Arizona,3,2.0,0.494,0.506,Arizona,,
+4,South,Alabama,Arizona,1,2.0,0.6823,0.3177,Alabama,,
+1,East,Kansas,Howard,1,16.0,0.925,0.075,Kansas,Kansas,True
+1,East,Arkansas,Illinois,8,9.0,0.6408,0.3592,Arkansas,Arkansas,True
+1,East,Saint Mary's,VCU,5,12.0,0.5821,0.4179,Saint Mary's,Saint Mary's,True
+1,East,Connecticut,Iona,4,13.0,0.8542,0.1458,Connecticut,Connecticut,True
+1,East,TCU,Arizona St.,6,11.0,0.4449,0.5551,Arizona St.,TCU,False
+1,East,Gonzaga,Grand Canyon,3,14.0,0.9358,0.0642,Gonzaga,Gonzaga,True
+1,East,Northwestern,Boise St.,7,10.0,0.5606,0.4394,Northwestern,Northwestern,True
+1,East,UCLA,UNC Asheville,2,15.0,0.887,0.113,UCLA,UCLA,True
+2,East,Kansas,Arkansas,1,8.0,0.6261,0.3739,Kansas,Arkansas,False
+2,East,Saint Mary's,Connecticut,5,4.0,0.1885,0.8115,Connecticut,Connecticut,True
+2,East,Arizona St.,Gonzaga,11,3.0,0.1139,0.8861,Gonzaga,Gonzaga,True
+2,East,Northwestern,UCLA,7,2.0,0.231,0.769,UCLA,UCLA,True
+3,East,Kansas,Connecticut,1,4.0,0.3821,0.6179,Connecticut,Connecticut,True
+3,East,Gonzaga,UCLA,3,2.0,0.6194,0.3806,Gonzaga,Gonzaga,True
+4,East,Connecticut,Gonzaga,4,3.0,0.4229,0.5771,Gonzaga,Connecticut,False
+1,West,Purdue,Texas Southern,1,16.0,0.9773,0.0227,Purdue,,
+1,West,Memphis,Florida Atlantic,8,9.0,0.4347,0.5653,Florida Atlantic,Florida Atlantic,True
+1,West,Duke,Oral Roberts,5,12.0,0.6767,0.3233,Duke,Duke,True
+1,West,Tennessee,Louisiana Lafayette,4,13.0,0.5824,0.4176,Tennessee,Tennessee,True
+1,West,Kentucky,Providence,6,11.0,0.8168,0.1832,Kentucky,Kentucky,True
+1,West,Kansas St.,Kennesaw St.,3,14.0,0.7697,0.2303,Kansas St.,Kansas St.,True
+1,West,Michigan St.,USC,7,10.0,0.7357,0.2643,Michigan St.,Michigan St.,True
+1,West,Marquette,Montana St.,2,14.0,0.7977,0.2023,Marquette,Marquette,True
+2,West,Purdue,Florida Atlantic,1,9.0,0.5686,0.4314,Purdue,Florida Atlantic,False
+2,West,Duke,Tennessee,5,4.0,0.7206,0.2794,Duke,Tennessee,False
+2,West,Kentucky,Kansas St.,6,3.0,0.6955,0.3045,Kentucky,Kansas St.,False
+2,West,Michigan St.,Marquette,7,2.0,0.7334,0.2666,Michigan St.,Michigan St.,True
+3,West,Purdue,Duke,1,5.0,0.5483,0.4517,Purdue,,
+3,West,Kentucky,Michigan St.,6,7.0,0.4699,0.5301,Michigan St.,,
+4,West,Purdue,Michigan St.,1,7.0,0.3904,0.6096,Michigan St.,,
+1,Midwest,Houston,Northern Kentucky,1,16.0,0.9453,0.0547,Houston,Houston,True
+1,Midwest,Iowa,Auburn,8,9.0,0.4427,0.5573,Auburn,Auburn,True
+1,Midwest,Miami FL,Drake,5,12.0,0.8244,0.1756,Miami FL,Miami FL,True
+1,Midwest,Indiana,Kent St.,4,13.0,0.696,0.304,Indiana,Indiana,True
+1,Midwest,Iowa St.,Pittsburgh,6,11.0,0.5716,0.4284,Iowa St.,Pittsburgh,False
+1,Midwest,Xavier,Kennesaw St.,3,14.0,0.8216,0.1784,Xavier,Xavier,True
+1,Midwest,Texas A&M,Penn St.,7,10.0,0.5702,0.4298,Texas A&M,Penn St.,False
+1,Midwest,Texas,Colgate,2,15.0,0.8932,0.1068,Texas,Texas,True
+2,Midwest,Houston,Auburn,1,9.0,0.8032,0.1968,Houston,Houston,True
+2,Midwest,Miami FL,Indiana,5,4.0,0.6047,0.3953,Miami FL,Miami FL,True
+2,Midwest,Iowa St.,Xavier,6,3.0,0.2997,0.7003,Xavier,Xavier,True
+2,Midwest,Texas A&M,Texas,7,2.0,0.3095,0.6905,Texas,Texas,True
+3,Midwest,Houston,Miami FL,1,5.0,0.6615,0.3385,Houston,Miami FL,False
+3,Midwest,Xavier,Texas,3,2.0,0.4359,0.5641,Texas,Texas,True
+4,Midwest,Houston,Texas,1,2.0,0.5866,0.4134,Houston,,
+5,Final Four,Alabama,Gonzaga,1,3.0,0.4458,0.5542,Gonzaga,,
+5,Final Four,Michigan St.,Houston,7,1.0,0.5047,0.4953,Michigan St.,,
+6,Championship,Gonzaga,Michigan St.,3,7.0,0.5555,0.4445,Gonzaga,,

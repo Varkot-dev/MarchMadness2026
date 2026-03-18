@@ -62,19 +62,20 @@ log = logging.getLogger(__name__)
 #
 # Selected: purely positive-correlation features with distinct predictive signal.
 FEATURES = [
-    # 3-feature set validated by holdout-year grid search (2024 test set).
-    # WAB+TALENT+KADJ O gave lowest log-loss (0.5415) and highest accuracy (0.716)
-    # vs all 1-, 2-, 3-feature combinations from the SHAP-selected pool.
+    # 4-feature set validated by holdout-year grid search (2024 test set).
+    # WAB+TALENT+KADJ O+COACH_PREMIUM: acc=0.7612, ll=0.5233
+    # vs WAB+TALENT+KADJ O alone:      acc=0.7313, ll=0.5411
+    # COACH_PREMIUM adds +2.9pp accuracy — strongest single additive feature.
     #
-    # Why these three?
-    #   WAB    captures schedule-adjusted resume quality (r=0.547 with rounds_won)
-    #   TALENT captures roster depth independent of current-year record (r=0.444)
-    #   KADJ O captures offensive firepower — orthogonal to resume and talent (r=0.449)
-    # Pairwise correlations: WAB-TALENT r=0.70, WAB-KADJ O r=0.76, TALENT-KADJ O r=0.57
-    # (much lower than WAB-BARTHAG r=0.90 or WAB-BADJ EM r=0.93)
-    "WAB",     # wins above bubble: schedule-adjusted resume (corr=0.547)
-    "TALENT",  # composite roster talent rating (corr=0.444)
-    "KADJ O",  # KenPom adjusted offensive efficiency pts/100 (corr=0.449)
+    # COACH_PREMIUM = PASE (Performance Above Seed Expectation) from Coach Results.csv.
+    # Career tournament wins minus expected wins by seed, computed over all prior seasons.
+    # Tom Izzo: 10.3 (best ever) | Calipari: 9.8 | Hurley: 5.8 | Bill Self: -3.7
+    #
+    # Pairwise correlations with WAB: COACH_PREMIUM r=0.21 (most orthogonal of all features)
+    "WAB",           # wins above bubble: schedule-adjusted resume (corr=0.547)
+    "TALENT",        # composite roster talent rating (corr=0.444)
+    "KADJ O",        # KenPom adjusted offensive efficiency pts/100 (corr=0.449)
+    "COACH_PREMIUM", # career PASE: tournament wins above seed expectation (corr=0.28)
 ]
 
 # Holdout year — never seen in training, used for final evaluation

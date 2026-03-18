@@ -110,9 +110,9 @@ def load_data() -> pd.DataFrame:
     two rows with feature differences (A-B, label=1) and (B-A, label=0).
     Only includes years/games where ALL candidate features are present.
     """
-    from src.models.win_probability import load_matchup_data, DIFF_FEATURES
+    from src.models.formula_model import load_matchup_data, FEATURES as DIFF_FEATURES
 
-    # Load using the existing pipeline (handles Kaggle ID→CBB name mapping)
+    # Load using formula_model pipeline (features_candidates.csv preferred)
     # Then restrict to CANDIDATE_FEATURES that are actually in the data
     base_df = load_matchup_data()
 

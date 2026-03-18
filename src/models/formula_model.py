@@ -90,7 +90,10 @@ ESPN_POINTS = ESPN_ROUND_POINTS  # local alias used throughout this file
 
 def load_matchup_data() -> pd.DataFrame:
     """
-    Build a symmetric matchup DataFrame from tournament results + features.
+    Build a symmetric matchup DataFrame from tournament results + candidate features.
+
+    Uses features_candidates.csv (enriched with engineered columns like EFF_RATIO)
+    rather than features_coaching.csv so all FEATURES are available.
 
     For each game (A beats B) creates two rows:
       row1: features(A) - features(B), label=1
@@ -99,16 +102,79 @@ def load_matchup_data() -> pd.DataFrame:
     Returns:
         DataFrame with FEATURES columns + LABEL + YEAR.
     """
-    from src.models.win_probability import load_matchup_data as _load
-    df = _load()
-    # Restrict to years with stable feature coverage
-    df = df[df["YEAR"].between(2013, 2024) & (df["YEAR"] != 2020)]
+    from src.utils.team_names import build_kaggle_to_cbb_map
+
+    feats_df = load_features()
+
+    results_path = EXTERNAL_DIR / "kaggle" / "MNCAATourneyDetailedResults.csv"
+    teams_path   = EXTERNAL_DIR / "kaggle" / "MTeams.csv"
+
+    results = pd.read_csv(results_path).rename(columns={"Season": "YEAR"})
+    teams   = pd.read_csv(teams_path)
+    kaggle_to_cbb = build_kaggle_to_cbb_map(feats_df, teams)
+
+    results["WTEAM"] = results["WTeamID"].map(kaggle_to_cbb)
+    results["LTEAM"] = results["LTeamID"].map(kaggle_to_cbb)
+
+    before = len(results)
+    results = results.dropna(subset=["WTEAM", "LTEAM"])
+    dropped = before - len(results)
+    if dropped:
+        log.warning(f"Dropped {dropped} games with unmapped team names")
+
+    results = results[results["YEAR"].between(2013, 2024) & (results["YEAR"] != 2020)]
+
+    feat_cols = ["YEAR", "TEAM"] + FEATURES
+    feat = feats_df[feat_cols].copy()
+
+    # Build feature lookup: (team, year) -> feature vector
+    feat_lookup: dict[tuple[str, int], np.ndarray] = {}
+    for _, row in feat.iterrows():
+        key = (row["TEAM"], int(row["YEAR"]))
+        vals = row[FEATURES].values
+        if not np.any(np.isnan(vals.astype(float))):
+            feat_lookup[key] = vals
+
+    records = []
+    skipped = 0
+    for _, row in results.iterrows():
+        year = int(row["YEAR"])
+        w_key = (row["WTEAM"], year)
+        l_key = (row["LTEAM"], year)
+        w_feats = feat_lookup.get(w_key)
+        l_feats = feat_lookup.get(l_key)
+        if w_feats is None or l_feats is None:
+            skipped += 1
+            continue
+        diff = w_feats - l_feats
+        records.append({**dict(zip(FEATURES, diff)),  "LABEL": 1, "YEAR": year})
+        records.append({**dict(zip(FEATURES, -diff)), "LABEL": 0, "YEAR": year})
+
+    if skipped:
+        log.warning(f"Skipped {skipped} games missing features (missing in features_candidates.csv)")
+
+    df = pd.DataFrame(records)
+    log.info(f"Matchup data: {len(df)//2} games, {df['YEAR'].nunique()} seasons")
     return df
 
 
 def load_features() -> pd.DataFrame:
-    """Load full feature matrix for all years."""
-    return pd.read_csv(PROCESSED_DIR / "features_coaching.csv")
+    """
+    Load full feature matrix.
+
+    Prefers features_candidates.csv (engineered columns like EFF_RATIO) if available.
+    Falls back to features_coaching.csv for the core features (TQS, SEED_DIVERGENCE, etc.).
+    """
+    for name in ("features_candidates.csv", "features_coaching.csv"):
+        path = PROCESSED_DIR / name
+        if path.exists():
+            if name != "features_coaching.csv":
+                log.info(f"Loaded features from {name}")
+            return pd.read_csv(path)
+    raise FileNotFoundError(
+        f"No feature file found in {PROCESSED_DIR}. "
+        "Run src/features/efficiency.py to generate features_coaching.csv."
+    )
 
 
 def load_actual_results(year: int) -> dict[str, int]:
@@ -118,25 +184,23 @@ def load_actual_results(year: int) -> dict[str, int]:
     Uses Kaggle tournament results + team name mapping.
     Round 6 = champion, 0 = lost in R64 without winning.
     """
+    from src.utils.team_names import build_kaggle_to_cbb_map, build_daynum_to_round
+
     rpath = EXTERNAL_DIR / "kaggle" / "MNCAATourneyDetailedResults.csv"
     tpath = EXTERNAL_DIR / "kaggle" / "MTeams.csv"
     if not rpath.exists() or not tpath.exists():
         return {}
 
-    from src.models.win_probability import _build_kaggle_to_cbb_map
-    feats = pd.read_csv(PROCESSED_DIR / "features_coaching.csv")
-    teams_df = pd.read_csv(tpath)
+    feats      = load_features()
+    teams_df   = pd.read_csv(tpath)
     results_df = pd.read_csv(rpath)
-    kaggle_to_cbb = _build_kaggle_to_cbb_map(feats, teams_df)
+    kaggle_to_cbb = build_kaggle_to_cbb_map(feats, teams_df)
 
     yr = results_df[results_df["Season"] == year]
     if yr.empty:
         return {}
 
-    # Infer DayNum → round dynamically from game counts so this works across
-    # all years including the 2021 bubble. Reuse backtest.py helper.
-    from src.evaluation.backtest import _build_daynum_to_round
-    daynum_to_round = _build_daynum_to_round(yr)
+    daynum_to_round = build_daynum_to_round(yr)
 
     team_rounds: dict[str, int] = {}
     for _, row in yr.iterrows():

@@ -154,11 +154,11 @@ def load_actual_results_raw(year: int) -> dict[str, int]:
     if not rpath.exists() or not tpath.exists():
         return {}
     try:
-        from src.models.win_probability import _build_kaggle_to_cbb_map
+        from src.utils.team_names import build_kaggle_to_cbb_map
         feats = pd.read_csv(PROCESSED_DIR / "features_coaching.csv")
         teams_df = pd.read_csv(tpath)
         results_df = pd.read_csv(rpath)
-        kaggle_to_cbb = _build_kaggle_to_cbb_map(feats, teams_df)
+        kaggle_to_cbb = build_kaggle_to_cbb_map(feats, teams_df)
     except Exception as e:
         log.warning(f"Could not build team name map: {e}")
         return {}
@@ -169,8 +169,8 @@ def load_actual_results_raw(year: int) -> dict[str, int]:
 
     # Infer rounds dynamically from game counts — avoids hardcoded DayNum tables
     # that break across years (especially the 2021 bubble tournament).
-    from src.evaluation.backtest import _build_daynum_to_round
-    daynum_to_round = _build_daynum_to_round(yr)
+    from src.utils.team_names import build_daynum_to_round
+    daynum_to_round = build_daynum_to_round(yr)
 
     team_rounds: dict[str, int] = {}
     for _, row in yr.iterrows():

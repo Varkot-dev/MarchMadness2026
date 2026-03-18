@@ -44,12 +44,13 @@ Always keep this in mind when making modeling decisions.
 **Output:** Float [0.0, 1.0] representing win probability
 
 **Implemented files:**
-- `src/models/win_probability.py` — LR + XGBoost, loso_cv(), temporal_cv(), build_win_prob_matrix()
-- `src/models/formula_model.py` — formula-based model with interpretable weights
+- `src/models/formula_model.py` — PRIMARY: formula weights, simulate_bracket(), run_full_pipeline()
+- `src/utils/team_names.py` — shared utilities: build_daynum_to_round(), build_kaggle_to_cbb_map()
+- `src/models/win_probability.py` — DELETED (was dead code bypassed by formula_model)
 
 **Current performance (temporal CV, 2016–2024):**
-- Logistic Regression: **77.5% accuracy, 0.468 log loss**
-- Formula model: similar range
+- Formula model (TQS + SEED_DIVERGENCE): **77.5% accuracy, 0.493 log loss**
+- Holdout ESPN: 610 (2022), 1200 (2023), 1300 (2024) — mean 1037/1920
 
 ### Layer 2: Monte Carlo Tournament Simulator
 **What it does:** Simulate the full 64-team bracket thousands of times

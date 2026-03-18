@@ -5,7 +5,6 @@ chalk,Auburn,4,E8,Duke
 chalk,BYU,1,R64,Duke
 chalk,Baylor,1,R64,Duke
 chalk,Clemson,1,R64,Duke
-chalk,Colorado St.,1,R64,Duke
 chalk,Connecticut,1,R64,Duke
 chalk,Duke,6,Champion,Duke
 chalk,Florida,5,F4,Duke
@@ -13,84 +12,84 @@ chalk,Gonzaga,1,R64,Duke
 chalk,Houston,4,E8,Duke
 chalk,Illinois,1,R64,Duke
 chalk,Iowa St.,2,R32,Duke
-chalk,Kansas,2,R32,Duke
+chalk,Kansas,1,R64,Duke
 chalk,Kentucky,2,R32,Duke
 chalk,Louisville,1,R64,Duke
 chalk,Marquette,1,R64,Duke
 chalk,Maryland,2,R32,Duke
+chalk,McNeese St.,1,R64,Duke
 chalk,Michigan,1,R64,Duke
 chalk,Michigan St.,3,S16,Duke
-chalk,North Carolina,1,R64,Duke
+chalk,Mississippi,1,R64,Duke
+chalk,Missouri,1,R64,Duke
 chalk,Oregon,1,R64,Duke
 chalk,Purdue,2,R32,Duke
 chalk,Saint Mary's,1,R64,Duke
-chalk,St. John's,1,R64,Duke
+chalk,St. John's,2,R32,Duke
 chalk,Tennessee,3,S16,Duke
 chalk,Texas A&M,2,R32,Duke
 chalk,Texas Tech,3,S16,Duke
 chalk,UCLA,1,R64,Duke
 chalk,Wisconsin,2,R32,Duke
-medium,Alabama,3,S16,Duke
-medium,Arizona,2,R32,Duke
-medium,Auburn,4,E8,Duke
-medium,BYU,1,R64,Duke
-medium,Clemson,1,R64,Duke
-medium,Colorado St.,1,R64,Duke
-medium,Duke,6,Champion,Duke
-medium,Florida,5,F4,Duke
-medium,Gonzaga,1,R64,Duke
-medium,Houston,4,E8,Duke
-medium,Illinois,2,R32,Duke
-medium,Iowa St.,1,R64,Duke
-medium,Kansas,1,R64,Duke
-medium,Kentucky,2,R32,Duke
-medium,Louisville,1,R64,Duke
-medium,Maryland,2,R32,Duke
-medium,Michigan,2,R32,Duke
-medium,Michigan St.,2,R32,Duke
-medium,Mississippi St.,1,R64,Duke
-medium,Missouri,1,R64,Duke
-medium,New Mexico,1,R64,Duke
-medium,North Carolina,3,S16,Duke
-medium,Oklahoma,1,R64,Duke
-medium,Oregon,1,R64,Duke
-medium,Purdue,2,R32,Duke
-medium,Saint Mary's,1,R64,Duke
-medium,St. John's,2,R32,Duke
-medium,Tennessee,3,S16,Duke
-medium,Texas A&M,1,R64,Duke
-medium,Texas Tech,3,S16,Duke
-medium,UCLA,1,R64,Duke
-medium,Wisconsin,1,R64,Duke
-chaos,Alabama,3,S16,Duke
-chaos,Arizona,2,R32,Duke
-chaos,Auburn,4,E8,Duke
-chaos,BYU,2,R32,Duke
-chaos,Duke,6,Champion,Duke
-chaos,Florida,5,F4,Duke
-chaos,Gonzaga,1,R64,Duke
-chaos,Houston,4,E8,Duke
-chaos,Iowa St.,1,R64,Duke
-chaos,Kansas,1,R64,Duke
-chaos,Kentucky,3,S16,Duke
-chaos,Liberty,1,R64,Duke
-chaos,Louisville,1,R64,Duke
-chaos,Maryland,2,R32,Duke
-chaos,McNeese St.,1,R64,Duke
-chaos,Memphis,1,R64,Duke
-chaos,Michigan,1,R64,Duke
-chaos,Michigan St.,1,R64,Duke
-chaos,Mississippi St.,1,R64,Duke
-chaos,Missouri,1,R64,Duke
-chaos,New Mexico,3,S16,Duke
-chaos,North Carolina,2,R32,Duke
-chaos,Oklahoma,1,R64,Duke
-chaos,Purdue,2,R32,Duke
-chaos,St. John's,3,S16,Duke
-chaos,Tennessee,2,R32,Duke
-chaos,Texas,2,R32,Duke
-chaos,Texas Tech,1,R64,Duke
-chaos,Utah St.,1,R64,Duke
-chaos,Vanderbilt,1,R64,Duke
-chaos,Wisconsin,1,R64,Duke
-chaos,Yale,2,R32,Duke
+medium,Alabama,3,S16,Gonzaga
+medium,Arizona,2,R32,Gonzaga
+medium,Arkansas,3,S16,Gonzaga
+medium,Auburn,4,E8,Gonzaga
+medium,BYU,1,R64,Gonzaga
+medium,Baylor,1,R64,Gonzaga
+medium,Colorado St.,1,R64,Gonzaga
+medium,Connecticut,1,R64,Gonzaga
+medium,Duke,5,F4,Gonzaga
+medium,Florida,4,E8,Gonzaga
+medium,Gonzaga,6,Champion,Gonzaga
+medium,Houston,1,R64,Gonzaga
+medium,Iowa St.,1,R64,Gonzaga
+medium,Kentucky,1,R64,Gonzaga
+medium,Louisville,1,R64,Gonzaga
+medium,Marquette,1,R64,Gonzaga
+medium,Maryland,2,R32,Gonzaga
+medium,McNeese St.,1,R64,Gonzaga
+medium,Michigan St.,3,S16,Gonzaga
+medium,Missouri,2,R32,Gonzaga
+medium,Oregon,1,R64,Gonzaga
+medium,Purdue,2,R32,Gonzaga
+medium,Saint Mary's,1,R64,Gonzaga
+medium,St. John's,1,R64,Gonzaga
+medium,Tennessee,3,S16,Gonzaga
+medium,Texas A&M,1,R64,Gonzaga
+medium,Texas Tech,1,R64,Gonzaga
+medium,UC San Diego,2,R32,Gonzaga
+medium,UCLA,1,R64,Gonzaga
+medium,VCU,2,R32,Gonzaga
+medium,Wisconsin,2,R32,Gonzaga
+chaos,Alabama,3,S16,Gonzaga
+chaos,Arizona,2,R32,Gonzaga
+chaos,Arkansas,4,E8,Gonzaga
+chaos,Auburn,4,E8,Gonzaga
+chaos,BYU,1,R64,Gonzaga
+chaos,Baylor,1,R64,Gonzaga
+chaos,Colorado St.,2,R32,Gonzaga
+chaos,Connecticut,1,R64,Gonzaga
+chaos,Duke,5,F4,Gonzaga
+chaos,Florida,2,R32,Gonzaga
+chaos,Gonzaga,6,Champion,Gonzaga
+chaos,Houston,1,R64,Gonzaga
+chaos,Iowa St.,1,R64,Gonzaga
+chaos,Kentucky,1,R64,Gonzaga
+chaos,Louisville,1,R64,Gonzaga
+chaos,Marquette,1,R64,Gonzaga
+chaos,Maryland,3,S16,Gonzaga
+chaos,McNeese St.,1,R64,Gonzaga
+chaos,Michigan St.,2,R32,Gonzaga
+chaos,Missouri,2,R32,Gonzaga
+chaos,Oregon,1,R64,Gonzaga
+chaos,Purdue,1,R64,Gonzaga
+chaos,Saint Mary's,1,R64,Gonzaga
+chaos,St. John's,1,R64,Gonzaga
+chaos,Tennessee,1,R64,Gonzaga
+chaos,Texas A&M,1,R64,Gonzaga
+chaos,Texas Tech,1,R64,Gonzaga
+chaos,UC San Diego,2,R32,Gonzaga
+chaos,UCLA,2,R32,Gonzaga
+chaos,VCU,3,S16,Gonzaga
+chaos,Wisconsin,2,R32,Gonzaga

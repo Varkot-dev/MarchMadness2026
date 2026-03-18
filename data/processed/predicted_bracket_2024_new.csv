@@ -1,0 +1,64 @@
+round,region,team_a,team_b,seed_a,seed_b,prob_a,prob_b,predicted_winner,actual_winner,correct
+1,South,Houston,Longwood,1,16,0.948,0.052,Houston,Houston,True
+1,South,Nebraska,Texas A&M,8,9,0.5079,0.4921,Nebraska,Texas A&M,False
+1,South,Wisconsin,James Madison,5,12,0.6776,0.3224,Wisconsin,James Madison,False
+1,South,Duke,Vermont,4,13,0.8286,0.1714,Duke,Duke,True
+1,South,Texas Tech,North Carolina St.,6,11,0.6373,0.3627,Texas Tech,North Carolina St.,False
+1,South,Kentucky,Akron,3,14,0.8516,0.1484,Kentucky,,
+1,South,Florida,Colorado St.,7,10,0.5845,0.4155,Florida,,
+1,South,Marquette,Western Kentucky,2,15,0.8837,0.1163,Marquette,Marquette,True
+2,South,Houston,Nebraska,1,8,0.7852,0.2148,Houston,Houston,True
+2,South,Wisconsin,Duke,5,4,0.4131,0.5869,Duke,Duke,True
+2,South,Texas Tech,Kentucky,6,3,0.4378,0.5622,Kentucky,,
+2,South,Florida,Marquette,7,2,0.358,0.642,Marquette,Marquette,True
+3,South,Houston,Duke,1,4,0.6327,0.3673,Houston,Duke,False
+3,South,Kentucky,Marquette,3,2,0.4583,0.5417,Marquette,,
+4,South,Houston,Marquette,1,2,0.6307,0.3693,Houston,,
+1,East,North Carolina,Wagner,1,16,0.9664,0.0336,North Carolina,North Carolina,True
+1,East,Mississippi St.,Michigan St.,8,9,0.4697,0.5303,Michigan St.,Michigan St.,True
+1,East,Saint Mary's,Grand Canyon,5,12,0.5578,0.4422,Saint Mary's,Grand Canyon,False
+1,East,Alabama,College of Charleston,4,13,0.7419,0.2581,Alabama,Alabama,True
+1,East,Clemson,New Mexico,6,11,0.5067,0.4933,Clemson,Clemson,True
+1,East,Baylor,Colgate,3,14,0.8778,0.1222,Baylor,Baylor,True
+1,East,Dayton,Nevada,7,10,0.5264,0.4736,Dayton,Dayton,True
+1,East,Arizona,Long Beach St.,2,15,0.9114,0.0886,Arizona,Arizona,True
+2,East,North Carolina,Michigan St.,1,9,0.7315,0.2685,North Carolina,North Carolina,True
+2,East,Saint Mary's,Alabama,5,4,0.3956,0.6044,Alabama,Alabama,True
+2,East,Clemson,Baylor,6,3,0.3617,0.6383,Baylor,Clemson,False
+2,East,Dayton,Arizona,7,2,0.3393,0.6607,Arizona,Arizona,True
+3,East,North Carolina,Alabama,1,4,0.6533,0.3467,North Carolina,Alabama,False
+3,East,Baylor,Arizona,3,2,0.48,0.52,Arizona,,
+4,East,North Carolina,Arizona,1,2,0.5503,0.4497,North Carolina,,
+1,West,Connecticut,Stetson,1,16,0.9428,0.0572,Connecticut,Connecticut,True
+1,West,Florida Atlantic,Northwestern,8,9,0.4794,0.5206,Northwestern,Northwestern,True
+1,West,San Diego St.,UAB,5,12,0.6842,0.3158,San Diego St.,San Diego St.,True
+1,West,Auburn,Yale,4,13,0.8078,0.1922,Auburn,Yale,False
+1,West,BYU,Duquesne,6,11,0.7393,0.2607,BYU,Duquesne,False
+1,West,Illinois,Morehead St.,3,14,0.8613,0.1387,Illinois,Illinois,True
+1,West,Washington St.,Drake,7,10,0.52,0.48,Washington St.,Washington St.,True
+1,West,Iowa St.,South Dakota St.,2,15,0.887,0.113,Iowa St.,Iowa St.,True
+2,West,Connecticut,Northwestern,1,9,0.8264,0.1736,Connecticut,Connecticut,True
+2,West,San Diego St.,Auburn,5,4,0.374,0.626,Auburn,San Diego St.,False
+2,West,BYU,Illinois,6,3,0.315,0.685,Illinois,Illinois,True
+2,West,Washington St.,Iowa St.,7,2,0.3336,0.6664,Iowa St.,Iowa St.,True
+3,West,Connecticut,Auburn,1,4,0.7192,0.2808,Connecticut,Connecticut,True
+3,West,Illinois,Iowa St.,3,2,0.5741,0.4259,Illinois,Illinois,True
+4,West,Connecticut,Illinois,1,3,0.6564,0.3436,Connecticut,Connecticut,True
+1,Midwest,Purdue,Grambling St.,1,16,0.9594,0.0406,Purdue,Purdue,True
+1,Midwest,Utah St.,TCU,8,9,0.4992,0.5008,TCU,Utah St.,False
+1,Midwest,Gonzaga,McNeese St.,5,12,0.6907,0.3093,Gonzaga,Gonzaga,True
+1,Midwest,Kansas,Samford,4,13,0.706,0.294,Kansas,Kansas,True
+1,Midwest,South Carolina,Oregon,6,11,0.5898,0.4102,South Carolina,Oregon,False
+1,Midwest,Creighton,Oakland,3,14,0.8375,0.1625,Creighton,Creighton,True
+1,Midwest,Texas,Colorado,7,10,0.5139,0.4861,Texas,Texas,True
+1,Midwest,Tennessee,Saint Peter's,2,15,0.9295,0.0705,Tennessee,Tennessee,True
+2,Midwest,Purdue,TCU,1,9,0.7961,0.2039,Purdue,Purdue,True
+2,Midwest,Gonzaga,Kansas,5,4,0.5129,0.4871,Gonzaga,Gonzaga,True
+2,Midwest,South Carolina,Creighton,6,3,0.4555,0.5445,Creighton,Creighton,True
+2,Midwest,Texas,Tennessee,7,2,0.3711,0.6289,Tennessee,Tennessee,True
+3,Midwest,Purdue,Gonzaga,1,5,0.717,0.283,Purdue,Purdue,True
+3,Midwest,Creighton,Tennessee,3,2,0.4751,0.5249,Tennessee,Tennessee,True
+4,Midwest,Purdue,Tennessee,1,2,0.6864,0.3136,Purdue,Purdue,True
+5,Final Four,Houston,North Carolina,1,1,0.5732,0.4268,Houston,,
+5,Final Four,Connecticut,Purdue,1,1,0.5301,0.4699,Connecticut,Connecticut,True
+6,Championship,Houston,Connecticut,1,1,0.4401,0.5599,Connecticut,Connecticut,True

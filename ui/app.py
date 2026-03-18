@@ -1,11 +1,12 @@
 """
 ui/app.py — Flask backend for the March Madness Bracket Visualizer.
 
-Predictions come from formula_model.py:
-  - Trained on 2013–2021 tournament data (strict temporal, no leakage)
+Predictions come from formula_model_new.py (new 2008–2026 dataset):
+  - Trained on 2008–2024 tournament data (strict temporal, no leakage)
   - Explicit formula: P(A beats B) = σ( SCORE(A) - SCORE(B) )
+  - Features: WAB + TALENT + KADJ O (SHAP-selected, 16-year dataset)
   - Holdout predictions: 2022, 2023, 2024 (never seen during training)
-  - 2025: uses the same formula fit on all available data (2013–2024)
+  - 2026: live prediction using full 2008–2024 training data
 
 Run from project root:
     python -m ui.app
@@ -57,65 +58,82 @@ SEED_PAIRINGS = [(1,16),(8,9),(5,12),(4,13),(6,11),(3,14),(7,10),(2,15)]
 # Do not use a hardcoded table — DayNums shift across years (esp. 2021 bubble).
 DAYNUM_TO_ROUND: dict[int, int] = {}  # populated dynamically
 
-# Training split used in formula_model.py
-TRAIN_YEARS   = list(range(2013, 2022))
+# Training split used in formula_model_new.py (new 16-year pipeline)
+TRAIN_YEARS   = list(range(2008, 2025))
 HOLDOUT_YEARS = [2022, 2023, 2024]
+LIVE_YEAR     = 2026
 
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 
 def load_formula_weights() -> dict:
     """
-    Load formula weights from formula_weights.csv.
+    Load formula weights. Prefers formula_new_weights.csv (new pipeline),
+    falls back to formula_weights.csv (legacy).
 
     Returns:
         Dict with feature → raw_weight, plus metadata.
     """
-    path = PROCESSED_DIR / "formula_weights.csv"
-    if not path.exists():
-        return {}
-    df = pd.read_csv(path)
-    return {
-        "weights": {
-            row["feature"]: {
-                "raw_weight":  float(row["raw_weight"]),
-                "norm_weight": float(row["norm_weight"]),
-                "interpretation": row["interpretation"],
-            }
-            for _, row in df.iterrows()
-        },
-        "formula": "P(A beats B) = σ( SCORE(A) − SCORE(B) )",
-        "score_formula": "SCORE(T) = Σ w_i × feature_i(T)",
-    }
+    for name in ("formula_new_weights.csv", "formula_weights.csv"):
+        path = PROCESSED_DIR / name
+        if not path.exists():
+            continue
+        df = pd.read_csv(path)
+        return {
+            "weights": {
+                row["feature"]: {
+                    "raw_weight":  float(row["raw_weight"]),
+                    "norm_weight": float(row["norm_weight"]),
+                    "interpretation": row.get("interpretation", row["feature"]),
+                }
+                for _, row in df.iterrows()
+            },
+            "formula": "P(A beats B) = σ( SCORE(A) − SCORE(B) )",
+            "score_formula": "SCORE(T) = Σ w_i × feature_i(T)",
+        }
+    return {}
 
 
 def load_cv_results() -> list[dict]:
-    """Load temporal CV results from formula_cv_results.csv."""
-    path = PROCESSED_DIR / "formula_cv_results.csv"
-    if not path.exists():
-        return []
-    df = pd.read_csv(path)
-    return df.to_dict("records")
+    """Load temporal CV results. Prefers formula_new_cv_results.csv."""
+    for name in ("formula_new_cv_results.csv", "formula_cv_results.csv"):
+        path = PROCESSED_DIR / name
+        if path.exists():
+            return pd.read_csv(path).to_dict("records")
+    return []
 
 
 def load_predicted_bracket(year: int) -> list[dict] | None:
     """
-    Load pre-computed bracket predictions for a holdout year.
+    Load pre-computed bracket predictions for a year.
 
-    Returns list of matchup dicts, or None if file doesn't exist.
+    Tries predicted_bracket_{year}_new.csv first (new pipeline),
+    then predicted_bracket_{year}.csv (legacy).
+
+    Returns list of matchup dicts, or None if no file found.
     """
-    path = PROCESSED_DIR / f"predicted_bracket_{year}.csv"
-    if not path.exists():
-        return None
-    df = pd.read_csv(path)
-    return df.to_dict("records")  # NaN handled by _NaNSafeEncoder at response time
+    for suffix in (f"_{year}_new.csv", f"_{year}.csv"):
+        path = PROCESSED_DIR / f"predicted_bracket{suffix}"
+        if path.exists():
+            return pd.read_csv(path).to_dict("records")
+    return None
 
 
 def load_features_for_year(year: int) -> dict[str, dict]:
-    """Load team features dict for a given year."""
-    path = PROCESSED_DIR / "features_coaching.csv"
-    if not path.exists():
+    """
+    Load team features dict for a given year from features_new.csv.
+
+    Returns dict of team_name → feature dict with new model features
+    (WAB, TALENT, KADJ O, BADJ EM, SEED_DIVERGENCE).
+    """
+    # Prefer new dataset
+    for fname in ("features_new.csv", "features_coaching.csv"):
+        path = PROCESSED_DIR / fname
+        if path.exists():
+            break
+    else:
         return {}
+
     df = pd.read_csv(path)
     yr = df[(df["YEAR"] == year) & df["SEED"].notna()].copy()
 
@@ -128,24 +146,27 @@ def load_features_for_year(year: int) -> dict[str, dict]:
 
     result = {}
     for _, row in yr.iterrows():
-        result[row["TEAM"]] = {
-            "team":               row["TEAM"],
-            "seed":               int(row["SEED"]),
-            "conf":               str(row.get("CONF") or ""),
-            "true_quality_score": sf(row.get("TRUE_QUALITY_SCORE")),
-            "seed_divergence":    sf(row.get("SEED_DIVERGENCE")),
-            "qms":                sf(row.get("QMS")),
-            "coach_premium":      sf(row.get("COACH_PREMIUM")),
-            "adjoe":              sf(row.get("ADJOE")),
-            "adjde":              sf(row.get("ADJDE")),
-            "postseason":         str(row["POSTSEASON"]) if pd.notna(row.get("POSTSEASON")) else None,
+        entry = {
+            "team": row["TEAM"],
+            "seed": int(row["SEED"]),
+            "conf": str(row.get("CONF") or ""),
         }
+        # New pipeline features
+        for col in ("WAB", "TALENT", "KADJ O", "BADJ EM", "SEED_DIVERGENCE",
+                    "KADJ EM", "KADJ D", "BADJ D", "EXP"):
+            if col in row:
+                entry[col.lower().replace(" ", "_")] = sf(row.get(col))
+        # Legacy features (fallback)
+        for col in ("TRUE_QUALITY_SCORE", "ADJOE", "ADJDE", "QMS", "COACH_PREMIUM"):
+            if col in row:
+                entry[col.lower()] = sf(row.get(col))
+        result[row["TEAM"]] = entry
     return result
 
 
 def load_actual_results_raw(year: int) -> dict[str, int]:
     """
-    Load actual tournament results using the Kaggle team name mapping.
+    Load actual tournament results using Kaggle data + new team name mapping.
 
     Returns dict of team_name → furthest round reached (0–6).
     """
@@ -154,21 +175,26 @@ def load_actual_results_raw(year: int) -> dict[str, int]:
     if not rpath.exists() or not tpath.exists():
         return {}
     try:
-        from src.utils.team_names import build_kaggle_to_cbb_map
-        feats = pd.read_csv(PROCESSED_DIR / "features_coaching.csv")
+        from src.features.new_matchup_builder import _build_kaggle_to_new_name
+        feats_df = pd.read_csv(PROCESSED_DIR / "features_new.csv")
         teams_df = pd.read_csv(tpath)
-        results_df = pd.read_csv(rpath)
-        kaggle_to_cbb = build_kaggle_to_cbb_map(feats, teams_df)
+        kaggle_to_cbb = _build_kaggle_to_new_name(feats_df, teams_df)
     except Exception as e:
-        log.warning(f"Could not build team name map: {e}")
-        return {}
+        log.warning(f"Could not build team name map via new pipeline: {e}. Trying legacy.")
+        try:
+            from src.utils.team_names import build_kaggle_to_cbb_map
+            feats = pd.read_csv(PROCESSED_DIR / "features_coaching.csv")
+            teams_df = pd.read_csv(tpath)
+            kaggle_to_cbb = build_kaggle_to_cbb_map(feats, teams_df)
+        except Exception as e2:
+            log.warning(f"Legacy map also failed: {e2}")
+            return {}
 
+    results_df = pd.read_csv(rpath)
     yr = results_df[results_df["Season"] == year]
     if yr.empty:
         return {}
 
-    # Infer rounds dynamically from game counts — avoids hardcoded DayNum tables
-    # that break across years (especially the 2021 bubble tournament).
     from src.utils.team_names import build_daynum_to_round
     daynum_to_round = build_daynum_to_round(yr)
 
@@ -186,104 +212,16 @@ def load_actual_results_raw(year: int) -> dict[str, int]:
     return {t: r for t, r in team_rounds.items() if r >= 0}
 
 
-def simulate_2025_bracket() -> list[dict] | None:
-    """
-    Simulate the 2025 bracket using the formula model trained on 2013–2024.
-
-    Used when predicted_bracket_2025.csv doesn't exist yet.
-    Returns list of matchup dicts in the same format as the holdout CSVs.
-    """
-    matrix_path = PROCESSED_DIR / "win_prob_matrix_2025.csv"
-    if not matrix_path.exists():
-        return None
-
-    try:
-        mx = pd.read_csv(matrix_path, index_col=0)
-    except Exception:
-        return None
-
-    feats = load_features_for_year(2025)
-    if not feats:
-        return None
-
-    from collections import defaultdict
-    by_seed: dict[int, list[str]] = defaultdict(list)
-    for team, info in feats.items():
-        by_seed[info["seed"]].append(team)
-
-    def resolve_ff(teams):
-        if len(teams) <= 4:
-            return teams[:4]
-        scores = {}
-        for t in teams:
-            if t in mx.index:
-                scores[t] = np.mean([float(mx.loc[t, o]) for o in teams if o != t and o in mx.index] or [0.5])
-            else:
-                scores[t] = 0.5
-        return sorted(teams, key=lambda t: scores[t], reverse=True)[:4]
-
-    region_teams = {r: {} for r in REGIONS}
-    for seed in sorted(by_seed):
-        main = resolve_ff(by_seed[seed])
-        for i, t in enumerate(main[:4]):
-            region_teams[REGIONS[i]][seed] = t
-
-    def play(ta, tb, rnd, region):
-        p = float(mx.loc[ta, tb]) if ta in mx.index and tb in mx.index else 0.5
-        winner = ta if p >= 0.5 else tb
-        return {
-            "year": 2025, "region": region, "round": rnd,
-            "round_name": ROUND_SHORT.get(rnd, f"R{rnd}"),
-            "team_a": ta, "team_b": tb,
-            "seed_a": feats.get(ta, {}).get("seed"),
-            "seed_b": feats.get(tb, {}).get("seed"),
-            "prob_a": round(p, 4), "prob_b": round(1-p, 4),
-            "predicted_winner": winner,
-            "actual_winner": None, "correct": None,
-        }
-
-    matchups = []
-    region_champs = {}
-    for region in REGIONS:
-        rt = region_teams[region]
-        current = []
-        for high, low in SEED_PAIRINGS:
-            ta = rt.get(high, f"Seed {high}")
-            tb = rt.get(low,  f"Seed {low}")
-            m = play(ta, tb, 1, region)
-            matchups.append(m)
-            current.append(m["predicted_winner"])
-        for rnd in [2, 3, 4]:
-            next_c = []
-            for i in range(0, len(current), 2):
-                if i+1 < len(current):
-                    m = play(current[i], current[i+1], rnd, region)
-                    matchups.append(m)
-                    next_c.append(m["predicted_winner"])
-            current = next_c
-        region_champs[region] = current[0] if current else None
-
-    f4w = []
-    for ra, rb in [(REGIONS[0], REGIONS[1]), (REGIONS[2], REGIONS[3])]:
-        m = play(region_champs[ra], region_champs[rb], 5, "Final Four")
-        matchups.append(m)
-        f4w.append(m["predicted_winner"])
-
-    m = play(f4w[0], f4w[1], 6, "Championship")
-    matchups.append(m)
-    return matchups
-
-
 def get_available_years() -> list[int]:
-    """Return years that have predicted bracket data or a win probability matrix."""
+    """Return years that have predicted bracket data."""
     years = set()
     for f in PROCESSED_DIR.glob("predicted_bracket_*.csv"):
         try:
-            years.add(int(f.stem.split("_")[-1]))
+            # handles both predicted_bracket_2024.csv and predicted_bracket_2024_new.csv
+            stem = f.stem.replace("_new", "")
+            years.add(int(stem.split("_")[-1]))
         except ValueError:
             pass
-    if (PROCESSED_DIR / "win_prob_matrix_2025.csv").exists():
-        years.add(2025)
     return sorted(years)
 
 
@@ -291,7 +229,6 @@ def compute_espn_score(matchups: list[dict], actual: dict[str, int]) -> int | No
     """Compute ESPN bracket score for a set of matchup predictions vs actual results."""
     if not actual:
         return None
-    # Build team_rounds from matchups
     team_rounds: dict[str, int] = {}
     for m in matchups:
         w = m.get("predicted_winner")
@@ -327,8 +264,8 @@ def api_bracket(year: int):
 
     Returns 400 if the year has no available data.
 
-    For 2022–2024: loads pre-computed predictions from formula_model.py.
-    For 2025: simulates from the win probability matrix.
+    For 2022–2024: loads pre-computed holdout predictions.
+    For 2026: loads live 2026 prediction from formula_model_new.py output.
 
     Response includes:
       - matchups: list of matchup dicts with predicted/actual winner + features
@@ -344,14 +281,10 @@ def api_bracket(year: int):
         return jsonify({"error": f"Year {year} not available. Valid years: {valid_years}"}), 400
 
     matchups = load_predicted_bracket(year)
-    is_holdout = year in HOLDOUT_YEARS
-
     if matchups is None:
-        if year == 2025:
-            matchups = simulate_2025_bracket()
-            is_holdout = False
-        if matchups is None:
-            return jsonify({"error": f"No bracket data for {year}. Run formula_model.py first."}), 404
+        return jsonify({"error": f"No bracket data for {year}. Run formula_model_new.py first."}), 404
+
+    is_holdout = year in HOLDOUT_YEARS
 
     # Attach full feature data to each matchup
     feats = load_features_for_year(year)
@@ -359,13 +292,13 @@ def api_bracket(year: int):
         m["features_a"] = feats.get(m.get("team_a"), {})
         m["features_b"] = feats.get(m.get("team_b"), {})
 
-    # Find champion
+    # Find predicted champion
     champion = None
     for m in matchups:
         if m.get("round") == 6:
             champion = m.get("predicted_winner")
 
-    # Actual results
+    # Actual results (Kaggle data — not available for 2026)
     actual = load_actual_results_raw(year)
     actual_champion = None
     if actual:
@@ -374,11 +307,10 @@ def api_bracket(year: int):
                 actual_champion = t
                 break
 
-    # ESPN score
+    # ESPN score + annotate matchups with actual_winner/correct
     espn_score = None
     if actual:
         espn_score = compute_espn_score(matchups, actual)
-        # Also annotate each matchup with actual_winner + correct if not already set
         if not is_holdout:
             for m in matchups:
                 ta, tb, rnd = m.get("team_a"), m.get("team_b"), m.get("round", 0)
@@ -402,9 +334,15 @@ def api_bracket(year: int):
                 "pct": round(n_correct / len(rnd_matchups), 4),
             }
 
-    # Formula and CV metadata
     formula_info = load_formula_weights()
     cv_results   = load_cv_results()
+
+    if year == LIVE_YEAR:
+        year_label = "live"
+    elif is_holdout:
+        year_label = "holdout"
+    else:
+        year_label = "training"
 
     return jsonify(_sanitize({
         "year":             year,
@@ -414,7 +352,7 @@ def api_bracket(year: int):
         "espn_score":       espn_score,
         "has_actual":       bool(actual),
         "is_holdout":       is_holdout,
-        "year_label":       "holdout" if is_holdout else ("live" if year == 2025 else "training"),
+        "year_label":       year_label,
         "round_accuracy":   round_acc,
         "formula":          formula_info,
         "cv_results":       cv_results,
@@ -427,8 +365,8 @@ def api_bracket(year: int):
 def api_formula():
     """Return model formula weights and CV results."""
     return jsonify(_sanitize({
-        "formula":    load_formula_weights(),
-        "cv_results": load_cv_results(),
+        "formula":       load_formula_weights(),
+        "cv_results":    load_cv_results(),
         "train_years":   TRAIN_YEARS,
         "holdout_years": HOLDOUT_YEARS,
     }))
@@ -440,6 +378,7 @@ if __name__ == "__main__":
     print("  http://localhost:5050")
     print("=" * 52)
     print(f"  Available years: {get_available_years()}")
-    print(f"  Training years:  {TRAIN_YEARS}")
+    print(f"  Training years:  {TRAIN_YEARS[:3]} … {TRAIN_YEARS[-3:]}")
     print(f"  Holdout years:   {HOLDOUT_YEARS}")
+    print(f"  Live year:       {LIVE_YEAR}")
     app.run(debug=True, port=5050, host="0.0.0.0")

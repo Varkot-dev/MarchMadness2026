@@ -141,43 +141,44 @@ SEED_DIVERGENCE_CLIP  # (-8, 8) — prevents extreme KenPom outliers
 
 ## Current State (as of March 2026)
 
-### Formula Model (`src/models/formula_model.py`) — PRIMARY PREDICTION ENGINE
-
-The explicit learned formula that replaced the original chalk/medium/chaos heuristic approach:
+### Primary Model (`src/models/formula_model_new.py`) — NEW 16-YEAR PIPELINE
 
 ```
-SCORE(T) = sum(wi * feature_i(T))
+SCORE(T) = w1*WAB(T) + w2*TALENT(T) + w3*KADJ_O(T)
 P(A beats B) = sigmoid( SCORE(A) - SCORE(B) )
 ```
 
-Weights are learned from logistic regression (elastic net, C=0.1) on 2013-2021 data.
-Top features by impact (see `data/processed/formula_weights.csv`):
-1. SEED_DIVERGENCE     — most important, positive weight (underseeded teams win more)
-2. TRUE_QUALITY_SCORE  — second most important
-3. ADJOE / ADJDE
-4. WAB, SEED, COACH_PREMIUM, QMS, ORB, TOR
+Trained on 2008–2024 (16 seasons, excl. 2020). Features selected by SHAP + holdout grid search.
 
-**Holdout results (2022-2024, never seen in training):**
-- 2022: ESPN 720  — Houston predicted, Kansas won (wrong)
-- 2023: ESPN 1320 — Connecticut predicted and won (correct)
-- 2024: ESPN 1570 — Connecticut predicted and won (correct)
-- Mean: 1203/1920 (63% of max), champion accuracy 2/3
+Top features: WAB (77.3% weight) > KADJ O (17.5%) > TALENT (5.2%)
 
-### 2025 Live Prediction
-- Trained on all available data: 2013-2024 (11 seasons, excl. 2020 COVID)
-- Real Selection Sunday bracket hard-coded in `generate_2025_bracket.py`
-- **Predicted 2025 champion: Florida**
-- Notable upset picks: McNeese St. over Memphis, Baylor over Mississippi St.
-- First Four results resolved via model win probability
-- Output: `data/processed/predicted_bracket_2025.csv`
+**Holdout results (2022-2024, new pipeline):**
+- 2022: ESPN 1180 — **Kansas predicted and won (correct ✓)**
+- 2023: ESPN 450  — Alabama predicted, Connecticut won (wrong — no Luck correction in Barttorvik)
+- 2024: ESPN 1280 — **Connecticut predicted and won (correct ✓)**
+- Mean: 970/1920, champion accuracy 2/3
 
-### Layer 1 — Win Probability (`src/models/formula_model.py`)
-- **`win_probability.py` was deleted** — it was dead code bypassed by `run_full_pipeline()`
-- Formula model is the sole prediction engine: `P(A beats B) = σ(score_A - score_B)`
-- Shared utilities extracted to `src/utils/team_names.py`: `build_daynum_to_round()`, `build_kaggle_to_cbb_map()`
-- Features: `TRUE_QUALITY_SCORE` (corr=0.596) + `SEED_DIVERGENCE` (corr=0.313) with rounds_won
-- WAB investigated as 3rd feature but r=0.93 with TQS causes sign-flip collinearity — not added
-- Tournament experience (prior game minutes) is the likely fix for 2022 Houston/Kansas miss
+**Full 8-year backtest (2016-2024 excl. 2020):** mean 902/1920, 3/8 champions correct
+
+### 2026 Live Prediction
+- Trained on all 2008–2024 data (16 seasons, excl. 2020)
+- **Predicted 2026 champion: Duke** (1-seed South, #1 KADJ EM 38.9, TALENT 91.2)
+- Final Four: Duke vs Houston, Arizona vs Michigan
+- Championship: Duke over Arizona (53.6%)
+- Output: `data/processed/predicted_bracket_2026_new.csv`
+
+### Layer 1 — Win Probability (`src/models/formula_model_new.py`)
+- Primary: `formula_model_new.py` — WAB+TALENT+KADJ O on new 16-year dataset
+- Legacy: `formula_model.py` — TQS+SEED_DIVERGENCE on features_coaching.csv (kept for reference)
+- `win_probability.py` was deleted — dead code bypassed by `run_full_pipeline()`
+- Shared utilities: `src/utils/team_names.py` — `build_daynum_to_round()`, `build_kaggle_to_cbb_map()`
+
+### Data Pipeline (New)
+- `src/features/new_data_loader.py` — loads 2008–2026 KenPom+Barttorvik+EvanMiya+Resumes
+- `src/features/new_matchup_builder.py` — 1047 games via Kaggle explicit WTeamID/LTeamID pairs
+- `src/models/shap_new_data.py` — SHAP feature selection on 16-year dataset
+- Team names consistent across all new CSVs — zero mapping issues within new dataset
+- Kaggle bridge: 254/263 unique teams mapped (96.6% coverage)
 
 ### Layer 2 — Monte Carlo Simulator (`src/models/simulator.py`)
 - Fully dynamic: loads bracket from Kaggle MNCAATourneySeeds.csv for any year
@@ -185,48 +186,35 @@ Top features by impact (see `data/processed/formula_weights.csv`):
 - 10,000 simulations, selects p90-maximizing bracket
 
 ### Layer 3 — Optimizer (`src/models/optimizer.py`)
-- Was completely broken (missing imports, wrong function signatures) — now fixed
 - Imports ESPN_ROUND_POINTS, REGIONS, FIRST_FOUR_2025 from config
-- `_build_bracket_structure_2025()` provides hardcoded 2025 Selection Sunday fallback
-  when Kaggle seed file doesn't have 2025 data yet
 - Run: `python -m src.models.optimizer`
-
-### Feature Engineering Notes
-- **Seed Divergence** clipped to +-8 to prevent extreme KenPom outliers from
-  destabilizing LR weights (raw values could previously reach +-49)
-- **True Quality Score** = AdjEM - (Luck * 0.4), falls back to ADJOE-ADJDE if no KenPom
-- **QMS** from Torvik game-by-game data; years without Torvik CSV get QMS=0 (known limitation)
-- **Coach Premium** uses CBB_TO_KAGGLE_NAMES map in coaching.py for team name bridging
 
 ### Web UI (`ui/app.py` + `ui/templates/index.html`)
 - Launch: `python -m ui.app` -> http://localhost:5050
-- Regions color-coded (South=blue, East=purple, West=orange, Midwest=teal)
-- Green/red left-border stripes on team slots for correct/wrong picks (holdout years)
-- Click any game -> sidebar: animated probability bar, model vs actual, feature comparison table
-- Formula button -> model weights as bar charts + per-year CV accuracy
-- `_NaNSafeEncoder` on the Flask app handles float NaN->null globally in all JSON responses
-- Invalid year requests return HTTP 400 with a clear list of available years
+- Available years: 2022, 2023, 2024, 2025, 2026
+- 2022-2024: holdout predictions (new pipeline), green/red correct/wrong indicators
+- 2026: live prediction — Duke champion
+- Click any game -> sidebar: win probability, feature comparison (WAB, TALENT, KADJ O)
+- Formula button -> model weights bar chart + per-year CV accuracy (12 folds)
 
 ### Key Processed Files
-- `data/processed/features_coaching.csv`              — full feature matrix (2013-2025)
-- `data/processed/formula_weights.csv`                — learned formula coefficients
-- `data/processed/formula_cv_results.csv`             — temporal CV per fold
-- `data/processed/win_prob_matrix_2025.csv`           — 68x68 pairwise probabilities
-- `data/processed/predicted_bracket_{2022,2023,2024,2025}.csv` — bracket predictions
+- `data/processed/features_new.csv`                   — 1215 rows, 2008-2026, 52 columns
+- `data/processed/matchups_new.csv`                   — 2094 rows (1047 games, 2008-2024)
+- `data/processed/formula_new_weights.csv`            — WAB/TALENT/KADJ O weights
+- `data/processed/formula_new_cv_results.csv`         — 12-fold temporal CV results
+- `data/processed/predicted_bracket_{2022,2023,2024}_new.csv` — holdout predictions
+- `data/processed/predicted_bracket_2026_new.csv`     — live 2026 prediction
+- `data/processed/features_coaching.csv`              — legacy feature matrix (2013-2025)
 
 ---
 
 ## Known Gaps / Next Improvements
 
-- **XGBoost not installed on this machine** — LR-only currently; `pip install xgboost` to enable
-- **QMS degrades silently** when Torvik CSV is missing for a year (gets QMS=0 with a log warning)
-- **No tournament experience feature** — prior March Madness minutes played is a known
-  predictor not yet implemented
-- **No unit tests for models** — tests/ only covers features; simulator/optimizer/formula_model
-  have no test coverage
-- **2022 champion badly wrong — root cause identified:** Houston had TQS=27.70/SEED_DIV=+4
-  vs Kansas TQS=27.47/SEED_DIV=0. WAB was investigated (Kansas 10.4 vs Houston 6.2) but
-  r=0.93 with TQS causes sign-flip collinearity — adding WAB doesn't flip the pick.
+- **2023 UConn miss** — Alabama dominates on WAB/TALENT/KADJ O; UConn's edge is defense
+  (KADJ D). No Luck correction in Barttorvik data means UConn's "overachievement" isn't
+  captured. KenPom Luck metric would fix this but isn't in the new dataset.
+- **No unit tests for models** — tests/ only covers features
+- **Simulator/optimizer not yet wired to new model** — still uses old formula_model.py
   Tournament experience is the likely fix: Kansas had 61 prior tourney games vs Houston's 11.
   This will be addressed by `feature/tourney-experience` branch (other agent).
 

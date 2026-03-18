@@ -56,10 +56,12 @@ march-madness/
 │   │   ├── coaching.py        <- Coaching Premium + CBB_TO_KAGGLE_NAMES map
 │   │   └── starpower.py       <- NBA prospect depth scoring
 │   ├── models/
-│   │   ├── win_probability.py <- Layer 1: LR + XGBoost, fitted sigma, vectorized matrix
-│   │   ├── formula_model.py   <- Explicit formula: SCORE(T) = sum(wi * feature_i(T))
+│   │   ├── formula_model.py   <- PRIMARY: Explicit formula SCORE(T) = sum(wi * feature_i(T))
+│   │   ├── shap_selector.py   <- Team-level SHAP feature selection (rounds_won target)
 │   │   ├── simulator.py       <- Layer 2: Monte Carlo simulator (imports from config)
 │   │   └── optimizer.py       <- Layer 3: Chalk/Medium/Chaos bracket optimizer
+│   ├── utils/
+│   │   └── team_names.py      <- build_daynum_to_round(), build_kaggle_to_cbb_map()
 │   ├── evaluation/
 │   │   └── backtest.py        <- Per-year backtest with dynamic round detection
 │   └── output/
@@ -169,13 +171,13 @@ Top features by impact (see `data/processed/formula_weights.csv`):
 - First Four results resolved via model win probability
 - Output: `data/processed/predicted_bracket_2025.csv`
 
-### Layer 1 — Win Probability (`src/models/win_probability.py`)
-- LR + XGBoost ensemble
-- Sigma for margin-to-probability conversion is now **fitted from training data** per fold
-  (was hardcoded at 10.5 — now calibrated to the actual spread of tournament results)
-- `build_win_prob_matrix()` is **vectorized**: single batch predict_proba call instead of
-  4,624 individual DataFrame filter lookups (much faster)
-- Output: `data/processed/win_prob_matrix_{year}.csv`
+### Layer 1 — Win Probability (`src/models/formula_model.py`)
+- **`win_probability.py` was deleted** — it was dead code bypassed by `run_full_pipeline()`
+- Formula model is the sole prediction engine: `P(A beats B) = σ(score_A - score_B)`
+- Shared utilities extracted to `src/utils/team_names.py`: `build_daynum_to_round()`, `build_kaggle_to_cbb_map()`
+- Features: `TRUE_QUALITY_SCORE` (corr=0.596) + `SEED_DIVERGENCE` (corr=0.313) with rounds_won
+- WAB investigated as 3rd feature but r=0.93 with TQS causes sign-flip collinearity — not added
+- Tournament experience (prior game minutes) is the likely fix for 2022 Houston/Kansas miss
 
 ### Layer 2 — Monte Carlo Simulator (`src/models/simulator.py`)
 - Fully dynamic: loads bracket from Kaggle MNCAATourneySeeds.csv for any year
@@ -224,6 +226,21 @@ Top features by impact (see `data/processed/formula_weights.csv`):
   have no test coverage
 - **2022 champion badly wrong** — model missed Kansas entirely; worth investigating what
   features would have differentiated Kansas from Houston that year
+
+---
+
+## Claude Code Skills (`.claude/skills/`)
+
+Invoke with `/skill-name` or by describing what you want:
+
+| Skill | Trigger phrases | What it does |
+|---|---|---|
+| `add-feature` | "add feature", "new feature" | Scaffolds a new feature module under `src/features/`, wires into `candidates.py` |
+| `run-backtest` | "backtest", "validate", "CV" | Validates model correctly, interprets ESPN vs CV metrics |
+| `model-experiment` | "experiment", "try model" | Scaffolds experiment scripts with baseline comparison |
+| `add-feature-test` | "write tests", "add tests" | Scaffolds unit + integration tests for feature modules |
+| `check-temporal-leakage` | "check leakage", "data leakage" | Audits code for temporal data leakage |
+| `fix-team-mapping` | "fix team mapping", "unmapped teams", "team name mismatch" | Diagnoses unmapped CBB↔Kaggle team names and patches `CBB_TO_KAGGLE_NAMES` |
 
 ---
 

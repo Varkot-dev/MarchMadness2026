@@ -49,8 +49,11 @@ Always keep this in mind when making modeling decisions.
 - `src/models/win_probability.py` — DELETED (was dead code bypassed by formula_model)
 
 **Current performance (temporal CV, 2016–2024):**
-- Formula model (TQS + SEED_DIVERGENCE): **77.5% accuracy, 0.493 log loss**
-- Holdout ESPN: 610 (2022), 1200 (2023), 1300 (2024) — mean 1037/1920
+- New model (WAB + TALENT + KADJ O, features_new.csv 2008–2024): **70.7% accuracy, 0.563 log loss** (8 CV folds)
+- Holdout ESPN: 1120 (2022 Kansas ✓), 480 (2023 UConn miss), 1380 (2024 UConn ✓) — mean **993/1920** on 2022-24
+- Old model (TQS + SEED_DIVERGENCE, features_coaching.csv 2013–2021): 77.5% acc, 0.493 ll
+- Old holdout ESPN: 610 (2022), 1200 (2023), 1300 (2024) — mean 1037/1920
+- 2023 miss explained: no Luck correction in new data → Alabama ranked above UConn on raw metrics
 
 ### Layer 2: Monte Carlo Tournament Simulator
 **What it does:** Simulate the full 64-team bracket thousands of times

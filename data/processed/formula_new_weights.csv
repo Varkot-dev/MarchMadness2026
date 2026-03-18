@@ -1,0 +1,4 @@
+feature,raw_weight,norm_weight,interpretation,feature_mean,feature_std
+WAB,0.114842,0.7728,wins above bubble — schedule-adjusted resume quality,0.0,7.0223
+KADJ O,0.026028,0.1751,KADJ O,0.0,8.4255
+TALENT,0.007743,0.0521,TALENT,0.0,42.1107

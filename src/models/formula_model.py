@@ -55,33 +55,33 @@ log = logging.getLogger(__name__)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-TRAIN_YEARS  = list(range(2013, 2022))   # 2013–2021 inclusive, excl. 2020
+TRAIN_YEARS  = list(range(2008, 2025))   # 2008–2024 inclusive, excl. 2020
 HOLDOUT_YEARS = [2022, 2023, 2024]       # predict these, never seen in training
 
 FEATURES = [
-    # 2-feature set validated by SHAP temporal CV (8 folds, 2016-2024).
+    # 3-feature set validated on new 16-year dataset (2008–2024, features_new.csv).
+    # Source: KenPom Barttorvik + Resumes CSVs from 2026 MarchMadness folder.
+    # Selected by holdout-year grid search (2022/2023/2024) from SHAP-ranked pool.
     #
-    # WAB was investigated as a 3rd feature to fix Houston-over-Kansas 2022
-    # (Kansas WAB=10.4 vs Houston WAB=6.2 despite similar TQS). However TQS
-    # and WAB are r=0.93 correlated — L2 regression assigns WAB a *negative*
-    # weight when both are present (collinearity sign flip), so adding WAB
-    # does not flip Kansas over Houston in any C configuration tested.
+    # WAB    captures schedule-adjusted resume quality (corr=0.547 with rounds_won)
+    # TALENT captures roster depth independent of record (corr=0.444, r=0.70 w/ WAB)
+    # KADJ O captures offensive firepower — orthogonal to resume/talent (corr=0.449)
     #
-    # The likely fix is tournament experience (prior games/minutes), which
-    # is orthogonal to efficiency and gave Kansas a 5.5x advantage over
-    # Houston (61 games vs 11 games before 2022). See feature/tourney-experience.
-    "TRUE_QUALITY_SCORE",  # efficiency: AdjEM - 0.4*Luck. corr(rounds_won)=0.596
-    "SEED_DIVERGENCE",     # underseeded identifier: corr(rounds_won)=0.313
-    # TOURNEY_EXP_LOG tested as 3rd feature — hurt mean ESPN (1083→1070) due to 11.4%
-    # imputed-to-zero teams distorting the coefficient. Kept in features_coaching.csv
-    # for future experimentation once name mapping coverage improves to ~95%+.
+    # Pairwise correlations much lower than previous combos:
+    #   WAB-TALENT r=0.70, WAB-KADJ O r=0.76, TALENT-KADJ O r=0.57
+    #   (vs WAB-BARTHAG r=0.90, WAB-BADJ EM r=0.93 which caused sign flips)
+    #
+    # Holdout ESPN (2022-2024): mean 993/1920
+    #   2022: 1120 (Kansas correct) ← TALENT gives Kansas edge over Houston
+    #   2023: 480  (Alabama predicted — UConn 2023 miss due to no Luck correction)
+    #   2024: 1380 (Connecticut correct)
+    "WAB",     # wins above bubble — schedule-adjusted resume
+    "TALENT",  # composite roster talent rating
+    "KADJ O",  # KenPom adjusted offensive efficiency (pts per 100 possessions)
 ]
 
-# L2 regularization strength. Smaller C = stronger regularization.
-# Validated by temporal CV grid search in run_temporal_cv(). At 2 features
-# the dataset is well-conditioned so C=1.0 (weak regularization) is fine.
-# Grid: [0.01, 0.05, 0.1, 0.25, 0.5, 1.0] — see run_temporal_cv() for results.
-C_REGULARIZATION: float = 1.0   # tuned by grid search
+# L2 regularization strength. C=0.05 optimal by temporal CV grid search.
+C_REGULARIZATION: float = 0.05
 
 # DayNum → round is inferred dynamically per year in load_actual_results()
 # using game counts (see _build_daynum_to_round). This constant is kept
@@ -97,17 +97,40 @@ ESPN_POINTS = ESPN_ROUND_POINTS  # local alias used throughout this file
 
 def load_matchup_data() -> pd.DataFrame:
     """
-    Build a symmetric matchup DataFrame from tournament results + candidate features.
+    Load symmetric matchup DataFrame (feature differences + LABEL + YEAR).
 
-    Uses features_candidates.csv (enriched with engineered columns like EFF_RATIO)
-    rather than features_coaching.csv so all FEATURES are available.
+    Prefers matchups_new.csv (pre-built from new 2008–2024 dataset via
+    new_matchup_builder.py). Falls back to building from Kaggle results +
+    features_coaching.csv for legacy support.
 
-    For each game (A beats B) creates two rows:
-      row1: features(A) - features(B), label=1
-      row2: features(B) - features(A), label=0
+    For each game (A beats B):
+      row1: features(A) - features(B), LABEL=1
+      row2: features(B) - features(A), LABEL=0
 
     Returns:
-        DataFrame with FEATURES columns + LABEL + YEAR.
+        DataFrame with FEATURES columns + LABEL + YEAR, filtered to TRAIN_YEARS.
+    """
+    new_matchups = PROCESSED_DIR / "matchups_new.csv"
+    if new_matchups.exists():
+        df = pd.read_csv(new_matchups)
+        log.info(f"Loaded matchups from matchups_new.csv: {len(df)//2} games")
+        keep = FEATURES + ["LABEL", "YEAR"]
+        missing = [f for f in FEATURES if f not in df.columns]
+        if missing:
+            log.warning(f"Features missing from matchups_new.csv: {missing}. Falling back.")
+        else:
+            df = df[keep].dropna()
+            df = df[df["YEAR"].isin(TRAIN_YEARS)]
+            return df
+
+    return _load_matchup_data_legacy()
+
+
+def _load_matchup_data_legacy() -> pd.DataFrame:
+    """
+    Legacy matchup builder: Kaggle game pairs + features_coaching.csv.
+
+    Used when matchups_new.csv is unavailable.
     """
     from src.utils.team_names import build_kaggle_to_cbb_map
 
@@ -169,25 +192,27 @@ def load_features() -> pd.DataFrame:
     """
     Load full feature matrix.
 
-    Prefers features_candidates.csv (engineered columns like EFF_RATIO) if available.
-    Falls back to features_coaching.csv for the core features (TQS, SEED_DIVERGENCE, etc.).
+    Prefers features_new.csv (new 2008–2026 dataset from 2026 MarchMadness folder).
+    Falls back to features_candidates.csv, then features_coaching.csv for legacy support.
+
+    Returns:
+        DataFrame with YEAR, TEAM, SEED, and all feature columns.
     """
-    for name in ("features_candidates.csv", "features_coaching.csv"):
+    for name in ("features_new.csv", "features_candidates.csv", "features_coaching.csv"):
         path = PROCESSED_DIR / name
         if path.exists():
-            if name != "features_coaching.csv":
-                log.info(f"Loaded features from {name}")
+            log.info(f"Loaded features from {name}")
             df = pd.read_csv(path)
-            # Impute experience features: NaN means no mapping found, treat as 0 (no prior experience)
+            # Impute experience features: NaN means no mapping found, treat as 0
             for col in ("TOURNEY_EXP_MINUTES", "TOURNEY_EXP_LOG"):
                 if col in df.columns and df[col].isna().any():
                     n = df[col].isna().sum()
                     df[col] = df[col].fillna(0.0)
-                    log.info(f"Imputed {n} NaN values in {col} with 0 (no prior experience)")
+                    log.info(f"Imputed {n} NaN in {col} with 0 (no prior experience)")
             return df
     raise FileNotFoundError(
         f"No feature file found in {PROCESSED_DIR}. "
-        "Run src/features/efficiency.py to generate features_coaching.csv."
+        "Run python3 -m src.features.new_data_loader to generate features_new.csv."
     )
 
 
@@ -419,7 +444,10 @@ def extract_formula(model: LogisticRegression, scaler: StandardScaler,
     interpretations = {
         "TRUE_QUALITY_SCORE": "higher = stronger team (AdjEM - 0.4*Luck)",
         "WAB":                "wins above bubble — resume quality / schedule difficulty",
-        "SEED_DIVERGENCE":    "positive = underseeded (KenPom ranks them better than seed)",
+        "BADJ EM":            "Barttorvik adjusted efficiency margin (offensive - defensive efficiency)",
+        "TALENT":             "composite roster talent rating (recruit rankings, draft prospects)",
+        "KADJ O":             "KenPom adjusted offensive efficiency (points per 100 possessions)",
+        "SEED_DIVERGENCE":    "positive = underseeded (actual_seed - KenPom_implied_seed > 0)",
         "QMS":                "quality momentum — weighted wins vs top-25/50/100 teams",
         "COACH_PREMIUM":      "career tournament wins above seed expectation (Tom Izzo signal)",
         "ADJOE":              "adjusted offensive efficiency (pts per 100 possessions)",

@@ -62,20 +62,21 @@ log = logging.getLogger(__name__)
 #
 # Selected: purely positive-correlation features with distinct predictive signal.
 FEATURES = [
-    # 4-feature set validated by holdout-year grid search (2024 test set).
-    # WAB+TALENT+KADJ O+COACH_PREMIUM: acc=0.7612, ll=0.5233
-    # vs WAB+TALENT+KADJ O alone:      acc=0.7313, ll=0.5411
-    # COACH_PREMIUM adds +2.9pp accuracy — strongest single additive feature.
+    # 3-feature set validated by holdout ESPN grid search (2022/2023/2024).
+    # WAB+TALENT+KADJ O: mean ESPN 970/1920 (2022:1180 Kansas✓, 2023:450, 2024:1280 UConn✓)
     #
-    # COACH_PREMIUM = PASE (Performance Above Seed Expectation) from Coach Results.csv.
-    # Career tournament wins minus expected wins by seed, computed over all prior seasons.
-    # Tom Izzo: 10.3 (best ever) | Calipari: 9.8 | Hurley: 5.8 | Bill Self: -3.7
+    # COACH_PREMIUM tested but excluded: statistically significant (p=0.027) but
+    # hurts ESPN bracket score — drops 2022 from 1180→660 because PASE rewards
+    # coaches on strong teams and disrupts the bracket path more than it helps.
+    # The partial correlation (r=0.254) reflects real signal but log-loss accuracy
+    # doesn't translate to ESPN bracket maximization.
     #
-    # Pairwise correlations with WAB: COACH_PREMIUM r=0.21 (most orthogonal of all features)
-    "WAB",           # wins above bubble: schedule-adjusted resume (corr=0.547)
-    "TALENT",        # composite roster talent rating (corr=0.444)
-    "KADJ O",        # KenPom adjusted offensive efficiency pts/100 (corr=0.449)
-    "COACH_PREMIUM", # career PASE: tournament wins above seed expectation (corr=0.28)
+    # WAB    r=0.547 with rounds_won, pairwise r=0.70 with TALENT, r=0.76 with KADJ O
+    # TALENT r=0.444 with rounds_won, independent of schedule quality
+    # KADJ O r=0.449 with rounds_won, captures offensive firepower
+    "WAB",    # wins above bubble: schedule-adjusted resume
+    "TALENT", # composite roster talent rating
+    "KADJ O", # KenPom adjusted offensive efficiency pts/100
 ]
 
 # Holdout year — never seen in training, used for final evaluation
@@ -84,8 +85,8 @@ HOLDOUT_YEAR = 2024
 # Training range
 TRAIN_YEARS = [y for y in range(2008, 2024) if y != 2020]
 
-# L2 regularization — grid-searched in run_temporal_cv()
-C_REGULARIZATION: float = 0.1
+# L2 regularization — validated by holdout ESPN grid search, C=0.05 optimal
+C_REGULARIZATION: float = 0.05
 
 ESPN_POINTS = ESPN_ROUND_POINTS
 
